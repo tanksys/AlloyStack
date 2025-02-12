@@ -28,9 +28,9 @@ back_colors = ["#CED8E0", "#FFF6DB", "#F9F0FD",
                "#D5E8D4", "white", "white", "white"]
 
 plt.bar(index, vm_socket, bar_width,
-        color=back_colors[0], label='VM TCP', edgecolor="#000000", zorder=2, linewidth=linewidth,)
+        color=back_colors[0], label='Inter-VM TCP', edgecolor="#000000", zorder=2, linewidth=linewidth,)
 plt.bar([i + bar_width for i in index],
-        proc_sock, bar_width, color=back_colors[1], label='Process TCP', edgecolor="#000000", zorder=2, linewidth=linewidth,)
+        proc_sock, bar_width, color=back_colors[1], label='Inter-Process TCP', edgecolor="#000000", zorder=2, linewidth=linewidth,)
 plt.bar([i + 2 * bar_width for i in index],
         mmap, bar_width, color=back_colors[2], label='Shared Memory', edgecolor="#000000", zorder=2, linewidth=linewidth,)
 plt.bar([i + 3 * bar_width for i in index],
@@ -52,7 +52,7 @@ plt.ylabel('Time (us)')
 # plt.title('Performance Comparison')
 plt.xticks([i + 1.5 * bar_width for i in index], categories)
 plt.yscale('log')  # 设置纵坐标为对数坐标轴
-plt.legend(framealpha=0, loc=(0.15, 1.01), ncol=2)
+plt.legend(framealpha=0, loc=(0.07, 1.01), ncol=2)
 plt.tight_layout()
 plt.grid(ls="--", zorder=1)
 plt.savefig('/home/yjn/Downloads/sec2_transfer.pdf')

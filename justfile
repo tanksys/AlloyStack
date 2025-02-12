@@ -143,6 +143,7 @@ init:
     rustup override set 'nightly-2023-12-01'
     rustup target add x86_64-unknown-linux-musl
     [ -f fs_images/fatfs.img ] || unzip fs_images/fatfs.zip -d fs_images
+    mkdir -p image_content
 
 asvisor:
     cargo build {{ release_flag }}
@@ -152,12 +153,14 @@ cold_start_latency: asvisor all_libos
     just rust_func load_all
     @-./scripts/del_tap.sh 2>/dev/null
 
-    @echo '\ncold start with on-demand loading'
+    @echo 'Section 8.2: Cold start Latency (Figure 10)'
+    @echo '\ncold start with on-demand loading cost (ms):'
     target/{{profile}}/asvisor --files isol_config/base_config.json --metrics total-dur 2>&1 | grep 'ms'
-    @echo '\ncold start without on-demand loading'
+    @echo '\ncold start without on-demand loading cost (ms):'
     target/{{profile}}/asvisor --files isol_config/load_all.json --metrics total-dur 2>&1 | grep 'ms'
 
 data_transfer_latency: asvisor all_libos
+    @echo 'Section 8.3: Intermediate Data Transfer Latency (ns) (Figure 11)'
     for data_size in '4*1024' '64*1024' '1024*1024' '16*1024*1024' '256*1024*1024'; do \
         echo $data_size > user/data_size.config; \
         just pass_args 1>/dev/null 2>/dev/null; \
@@ -166,30 +169,32 @@ data_transfer_latency: asvisor all_libos
     done
 
 end_to_end_latency: asvisor all_libos map_reduce parallel_sort long_chain
+    @echo '\nSection 8.4: Rust Benchmark Evaluation (Figure 12)'
     -sudo mount fs_images/fatfs.img image_content 2>/dev/null
     sudo -E ./scripts/gen_data.py 3 '100 * 1024 * 1024' 3 '25 * 1024 * 1024'
     
-    @echo 'word count cost: '
+    @echo '\nword count (100MB, C3) cost: '
     target/{{profile}}/asvisor --files isol_config/map_reduce_large_c3.json --metrics total-dur 2>&1 | grep 'total_dur'
 
-    @echo 'parallel sorting cost: '
+    @echo '\nparallel sorting (25MB, C3) cost: '
     target/{{profile}}/asvisor --files isol_config/parallel_sort_c3.json --metrics total-dur 2>&1 | grep 'total_dur'
 
-    @echo 'function chain cost: '
+    @echo '\nfunction chain (64MB, N15) cost: '
+    echo '64 * 1024 * 1024' > user/function_chain_data_size.config
     target/{{profile}}/asvisor --files isol_config/long_chain_n15.json --metrics total-dur 2>&1 | grep 'total_dur'
 
+    @echo '\nSection 8.5: C and Python Benchmark Evaluation (Figure 14)'
     just c_end_to_end_latency
     just py_end_to_end_latency
 
 c_end_to_end_latency: asvisor all_libos all_c_wasm
-    # C applications.
-    @echo 'C word count cost: '
+    @echo 'C word count (100MB, C3) cost: '
     target/{{profile}}/asvisor --files isol_config/wasmtime_wordcount_c3.json --metrics total-dur 2>&1 | grep 'total_dur'
 
-    @echo 'C parallel sorting cost: '
+    @echo 'C parallel sorting (25MB, C3) cost: '
     target/{{profile}}/asvisor --files isol_config/wasmtime_parallel_sort_c3.json --metrics total-dur 2>&1  | grep 'total_dur'
 
-    @echo 'C function chain cost: '
+    @echo 'C function chain (1MB, N10) cost: '
     target/{{profile}}/asvisor --files isol_config/wasmtime_longchain.json --metrics total-dur 2>&1 | grep 'total_dur'
 
 py_end_to_end_latency: asvisor all_libos all_py_wasm
@@ -198,16 +203,17 @@ py_end_to_end_latency: asvisor all_libos all_py_wasm
     sudo -E ./scripts/gen_data.py 1 '1 * 1024 * 1024' 1 '1 * 1024 * 1024'
 
     sleep 3
-    @echo 'Python word count cost: '
+    @echo 'Python word count (1MB, C1) cost: '
     target/{{profile}}/asvisor --files isol_config/wasmtime_cpython_wordcount_c1.json --metrics total-dur 2>&1 | grep 'total_dur'
     
-    @echo 'Python parallel sorting cost: '
+    @echo 'Python parallel sorting (1MB, C1) cost: '
     target/{{profile}}/asvisor --files isol_config/wasmtime_cpython_parallel_sort_c1.json --metrics total-dur 2>&1 | grep 'total_dur'
     
-    @echo 'Python long chain cost: '
+    @echo 'Python long chain (1MB, N5) cost: '
     target/{{profile}}/asvisor --files isol_config/wasmtime_cpython_functionchain_n5.json --metrics total-dur 2>&1 | grep 'total_dur'
 
 breakdown: asvisor all_libos
+    @echo '\nSection 8.6: Breakdown Analysis (Figure 15)'
     -sudo mount fs_images/fatfs.img image_content 2>/dev/null
     -sudo ./scripts/del_tap.sh
     sudo -E ./scripts/gen_data.py 5 '10 * 1024 * 1024' 5 '1 * 1024 * 1024'
@@ -218,64 +224,81 @@ breakdown: asvisor all_libos
         cargo build {{ release_flag }} {{ mpk_feature_flag }} --features file-based --manifest-path user/${func_name}/Cargo.toml; \
     done ;
 
+    @echo 'Word Count'
     target/{{profile}}/asvisor --files isol_config/map_reduce_load_all.json --metrics total-dur 2>&1 | grep 'total_dur'
     sudo rm -f ./image_content/*.imd
+    @echo 'Parallel Sorting'
     target/{{profile}}/asvisor --files isol_config/parallel_sort_load_all.json --metrics total-dur 2>&1 | grep 'total_dur'
     sudo rm -f ./image_content/*.imd
+    @echo 'Function Chain'
     target/{{profile}}/asvisor --files isol_config/long_chain_load_all.json --metrics total-dur 2>&1 | grep 'total_dur'
     sudo rm -f ./image_content/*.imd
 
     @echo '\n+on-demand-loding (-reference-passing)'
+    @echo 'Word Count'
     target/{{profile}}/asvisor --files isol_config/map_reduce_large_c5.json --metrics total-dur 2>&1 | grep 'total_dur'
     sudo rm -f ./image_content/*.imd
+    @echo 'Parallel Sorting'
     target/{{profile}}/asvisor --files isol_config/parallel_sort_c5.json --metrics total-dur 2>&1 | grep 'total_dur'
     sudo rm -f ./image_content/*.imd
+    @echo 'Function Chain'
     target/{{profile}}/asvisor --files isol_config/long_chain_n15.json --metrics total-dur 2>&1 | grep 'total_dur'
+    sudo rm -f ./image_content/*.imd
 
     @echo '\n+both'
     for func_name in 'mapper' 'reducer' 'file_reader' 'sorter' 'splitter' 'merger' 'array_sum'; do \
         cargo build {{ release_flag }} {{ mpk_feature_flag }} --manifest-path user/${func_name}/Cargo.toml; \
     done ;
     
+    @echo 'Word Count'
     target/{{profile}}/asvisor --files isol_config/map_reduce_large_c5.json --metrics total-dur 2>&1 | grep 'total_dur'
+    @echo 'Parallel Sorting'
     target/{{profile}}/asvisor --files isol_config/parallel_sort_c5.json --metrics total-dur 2>&1 | grep 'total_dur'
+    @echo 'Function Chain'
     target/{{profile}}/asvisor --files isol_config/long_chain_n15.json --metrics total-dur 2>&1 | grep 'total_dur'
 
-p99: asvisor all_libos parallel_sort
+p99_latency: asvisor all_libos parallel_sort
+    @echo 'Section 8.4: Rust Benchmark Evaluation (Figure 13(a))'
+    
+    @-sudo rm monitor.log
     -sudo mount fs_images/fatfs.img image_content 2>/dev/null
     sudo -E ./scripts/gen_data.py 0 0 3 '25 * 1024 * 1024'
 
-    @echo 'p99 10'
+    @echo '\np99 QPS=10 (ms)'
     ./p99tester 10 | grep 'p99'
-    @echo 'p99 20'
+    @echo '\np99 QPS=20'
     ./p99tester 20 | grep 'p99'
-    @echo 'p99 40'
+    @echo '\np99 QPS=40'
     ./p99tester 40 | grep 'p99'
-    @echo 'p99 80'
+    @echo '\np99 QPS=80'
     ./p99tester 80 | grep 'p99'
 
 resource_consume: asvisor all_libos parallel_sort
+    @echo 'Section 8.4: Rust Benchmark Evaluation (Figure 13(b))'
+
+    @-sudo rm monitor.log
     -sudo mount fs_images/fatfs.img image_content 2>/dev/null
     sudo -E ./scripts/gen_data.py 0 0 5 '25 * 1024 * 1024'
 
     @sleep 3
-    @echo 'resource instances 20'
+    @echo '\nnumber of instances=20'
     ./resourcetester 20 | grep 'total consume mem:'
     mv monitor.log as_parallel_sort_resouce_c5_25_20.txt
 
     @sleep 3
-    @echo 'resource instances 40'
+    @echo '\nnumber of instances=40'
     ./resourcetester 40 | grep 'total consume mem:'
     mv monitor.log as_parallel_sort_resouce_c5_25_40.txt
 
     @sleep 3
-    @echo 'resource instances 60'
+    @echo '\nnumber of instances=60'
     ./resourcetester 60 | grep 'total consume mem:'
     mv monitor.log as_parallel_sort_resouce_c5_25_60.txt
 
     @sleep 3
-    @echo 'resource instances 80'
+    @echo '\nnumber of instances=80'
     ./resourcetester 80 | grep 'total consume mem:'
     mv monitor.log as_parallel_sort_resouce_c5_25_80.txt
 
-    ./scripts/comp_resource.py
+    @echo '\n Cost CPU: '
+    -./scripts/comp_resource.py
