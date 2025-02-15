@@ -173,13 +173,13 @@ end_to_end_latency: asvisor all_libos map_reduce parallel_sort long_chain
     -sudo mount fs_images/fatfs.img image_content 2>/dev/null
     sudo -E ./scripts/gen_data.py 3 '100 * 1024 * 1024' 3 '25 * 1024 * 1024'
     
-    @echo '\nword count (100MB, C3) cost: '
+    @echo '\nword count (data size 100MB, 3 instances) cost: '
     target/{{profile}}/asvisor --files isol_config/map_reduce_large_c3.json --metrics total-dur 2>&1 | grep 'total_dur'
 
-    @echo '\nparallel sorting (25MB, C3) cost: '
+    @echo '\nparallel sorting (data size 25MB, 3 instances) cost: '
     target/{{profile}}/asvisor --files isol_config/parallel_sort_c3.json --metrics total-dur 2>&1 | grep 'total_dur'
 
-    @echo '\nfunction chain (64MB, N15) cost: '
+    @echo '\nfunction chain (data size 64MB, 15 functions) cost: '
     echo '64 * 1024 * 1024' > user/function_chain_data_size.config
     target/{{profile}}/asvisor --files isol_config/long_chain_n15.json --metrics total-dur 2>&1 | grep 'total_dur'
 
@@ -188,13 +188,13 @@ end_to_end_latency: asvisor all_libos map_reduce parallel_sort long_chain
     just py_end_to_end_latency
 
 c_end_to_end_latency: asvisor all_libos all_c_wasm
-    @echo 'C word count (100MB, C3) cost: '
+    @echo 'C word count (data size 100MB, 3 instances) cost: '
     target/{{profile}}/asvisor --files isol_config/wasmtime_wordcount_c3.json --metrics total-dur 2>&1 | grep 'total_dur'
 
-    @echo 'C parallel sorting (25MB, C3) cost: '
+    @echo 'C parallel sorting (data size 25MB, 3 instances) cost: '
     target/{{profile}}/asvisor --files isol_config/wasmtime_parallel_sort_c3.json --metrics total-dur 2>&1  | grep 'total_dur'
 
-    @echo 'C function chain (1MB, N10) cost: '
+    @echo 'C function chain (data size 1MB, 10 functions) cost: '
     target/{{profile}}/asvisor --files isol_config/wasmtime_longchain.json --metrics total-dur 2>&1 | grep 'total_dur'
 
 py_end_to_end_latency: asvisor all_libos all_py_wasm
@@ -203,13 +203,13 @@ py_end_to_end_latency: asvisor all_libos all_py_wasm
     sudo -E ./scripts/gen_data.py 1 '1 * 1024 * 1024' 1 '1 * 1024 * 1024'
 
     sleep 3
-    @echo 'Python word count (1MB, C1) cost: '
+    @echo 'Python word count (data size 1MB, 1 instance) cost: '
     target/{{profile}}/asvisor --files isol_config/wasmtime_cpython_wordcount_c1.json --metrics total-dur 2>&1 | grep 'total_dur'
     
-    @echo 'Python parallel sorting (1MB, C1) cost: '
+    @echo 'Python parallel sorting (data size 1MB, 1 instance) cost: '
     target/{{profile}}/asvisor --files isol_config/wasmtime_cpython_parallel_sort_c1.json --metrics total-dur 2>&1 | grep 'total_dur'
     
-    @echo 'Python long chain (1MB, N5) cost: '
+    @echo 'Python long chain (data size 1MB, 5 functions) cost: '
     target/{{profile}}/asvisor --files isol_config/wasmtime_cpython_functionchain_n5.json --metrics total-dur 2>&1 | grep 'total_dur'
 
 breakdown: asvisor all_libos
