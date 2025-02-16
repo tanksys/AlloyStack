@@ -11,7 +11,7 @@ plt.rcParams.update({'font.size': 20})
 # 线宽
 linewidth = 0.8
 mpl.rcParams['hatch.linewidth'] = linewidth
-fig = plt.figure(figsize=(9.3, 5), dpi=150)
+fig = plt.figure(figsize=(9.3, 4.5), dpi=150)
 
 # 数据
 categories = ['1KB' , '64KB', '128KB']
@@ -53,7 +53,9 @@ plt.ylabel('Time (us)')
 plt.xticks([i + 1.5 * bar_width for i in index], categories)
 plt.yscale('log')  # 设置纵坐标为对数坐标轴
 plt.legend(framealpha=0, loc=(0.07, 1.01), ncol=2)
-plt.tight_layout()
+# plt.tight_layout()
+plt.subplots_adjust(top=0.82, bottom=0.15, left=0.1, right=0.97)
+
 plt.grid(ls="--", zorder=1)
 plt.savefig('/home/yjn/Downloads/sec2_transfer.pdf')
 # plt.show()

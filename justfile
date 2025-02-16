@@ -173,13 +173,13 @@ end_to_end_latency: asvisor all_libos map_reduce parallel_sort long_chain
     -sudo mount fs_images/fatfs.img image_content 2>/dev/null
     sudo -E ./scripts/gen_data.py 3 '100 * 1024 * 1024' 3 '25 * 1024 * 1024'
     
-    @echo '\nword count (data size 100MB, 3 instances) cost: '
+    @echo '\n(Figure 12) word count (data size 100MB, 3 instances) cost: '
     target/{{profile}}/asvisor --files isol_config/map_reduce_large_c3.json --metrics total-dur 2>&1 | grep 'total_dur'
 
-    @echo '\nparallel sorting (data size 25MB, 3 instances) cost: '
+    @echo '\n(Figure 12) parallel sorting (data size 25MB, 3 instances) cost: '
     target/{{profile}}/asvisor --files isol_config/parallel_sort_c3.json --metrics total-dur 2>&1 | grep 'total_dur'
 
-    @echo '\nfunction chain (data size 64MB, 15 functions) cost: '
+    @echo '\n(Figure 12) function chain (data size 64MB, 15 functions) cost: '
     echo '64 * 1024 * 1024' > user/function_chain_data_size.config
     target/{{profile}}/asvisor --files isol_config/long_chain_n15.json --metrics total-dur 2>&1 | grep 'total_dur'
 
@@ -188,13 +188,13 @@ end_to_end_latency: asvisor all_libos map_reduce parallel_sort long_chain
     just py_end_to_end_latency
 
 c_end_to_end_latency: asvisor all_libos all_c_wasm
-    @echo 'C word count (data size 100MB, 3 instances) cost: '
+    @echo '(Figure 14) C word count (data size 100MB, 3 instances) cost: '
     target/{{profile}}/asvisor --files isol_config/wasmtime_wordcount_c3.json --metrics total-dur 2>&1 | grep 'total_dur'
 
-    @echo 'C parallel sorting (data size 25MB, 3 instances) cost: '
+    @echo '(Figure 14) C parallel sorting (data size 25MB, 3 instances) cost: '
     target/{{profile}}/asvisor --files isol_config/wasmtime_parallel_sort_c3.json --metrics total-dur 2>&1  | grep 'total_dur'
 
-    @echo 'C function chain (data size 1MB, 10 functions) cost: '
+    @echo '(Figure 14) C function chain (data size 1MB, 10 functions) cost: '
     target/{{profile}}/asvisor --files isol_config/wasmtime_longchain.json --metrics total-dur 2>&1 | grep 'total_dur'
 
 py_end_to_end_latency: asvisor all_libos all_py_wasm
@@ -203,13 +203,13 @@ py_end_to_end_latency: asvisor all_libos all_py_wasm
     sudo -E ./scripts/gen_data.py 1 '1 * 1024 * 1024' 1 '1 * 1024 * 1024'
 
     sleep 3
-    @echo 'Python word count (data size 1MB, 1 instance) cost: '
+    @echo '(Figure 14) Python word count (data size 1MB, 1 instance) cost: '
     target/{{profile}}/asvisor --files isol_config/wasmtime_cpython_wordcount_c1.json --metrics total-dur 2>&1 | grep 'total_dur'
     
-    @echo 'Python parallel sorting (data size 1MB, 1 instance) cost: '
+    @echo '(Figure 14) Python parallel sorting (data size 1MB, 1 instance) cost: '
     target/{{profile}}/asvisor --files isol_config/wasmtime_cpython_parallel_sort_c1.json --metrics total-dur 2>&1 | grep 'total_dur'
     
-    @echo 'Python long chain (data size 1MB, 5 functions) cost: '
+    @echo '(Figure 14) Python long chain (data size 1MB, 5 functions) cost: '
     target/{{profile}}/asvisor --files isol_config/wasmtime_cpython_functionchain_n5.json --metrics total-dur 2>&1 | grep 'total_dur'
 
 breakdown: asvisor all_libos
@@ -219,42 +219,39 @@ breakdown: asvisor all_libos
     sudo -E ./scripts/gen_data.py 5 '10 * 1024 * 1024' 5 '1 * 1024 * 1024'
     @echo '1 * 1024 * 1024' > user/function_chain_data_size.config
 
-    @echo 'base (-on-demand-loding, -reference-passing)'
     for func_name in 'mapper' 'reducer' 'file_reader' 'sorter' 'splitter' 'merger' 'array_sum'; do \
         cargo build {{ release_flag }} {{ mpk_feature_flag }} --features file-based --manifest-path user/${func_name}/Cargo.toml; \
     done ;
 
-    @echo 'Word Count'
+    @echo '(Figure 15) base (-on-demand-loding, -reference-passing) Word Count'
     target/{{profile}}/asvisor --files isol_config/map_reduce_load_all.json --metrics total-dur 2>&1 | grep 'total_dur'
     sudo rm -f ./image_content/*.imd
-    @echo 'Parallel Sorting'
+    @echo '(Figure 15) base (-on-demand-loding, -reference-passing) Parallel Sorting'
     target/{{profile}}/asvisor --files isol_config/parallel_sort_load_all.json --metrics total-dur 2>&1 | grep 'total_dur'
     sudo rm -f ./image_content/*.imd
-    @echo 'Function Chain'
+    @echo '(Figure 15) base (-on-demand-loding, -reference-passing) Function Chain'
     target/{{profile}}/asvisor --files isol_config/long_chain_load_all.json --metrics total-dur 2>&1 | grep 'total_dur'
     sudo rm -f ./image_content/*.imd
 
-    @echo '\n+on-demand-loding (-reference-passing)'
-    @echo 'Word Count'
+    @echo '(Figure 15) +on-demand-loding (-reference-passing) Word Count'
     target/{{profile}}/asvisor --files isol_config/map_reduce_large_c5.json --metrics total-dur 2>&1 | grep 'total_dur'
     sudo rm -f ./image_content/*.imd
-    @echo 'Parallel Sorting'
+    @echo '(Figure 15) +on-demand-loding (-reference-passing) Parallel Sorting'
     target/{{profile}}/asvisor --files isol_config/parallel_sort_c5.json --metrics total-dur 2>&1 | grep 'total_dur'
     sudo rm -f ./image_content/*.imd
-    @echo 'Function Chain'
+    @echo '(Figure 15) +on-demand-loding (-reference-passing) Function Chain'
     target/{{profile}}/asvisor --files isol_config/long_chain_n15.json --metrics total-dur 2>&1 | grep 'total_dur'
     sudo rm -f ./image_content/*.imd
 
-    @echo '\n+both'
     for func_name in 'mapper' 'reducer' 'file_reader' 'sorter' 'splitter' 'merger' 'array_sum'; do \
         cargo build {{ release_flag }} {{ mpk_feature_flag }} --manifest-path user/${func_name}/Cargo.toml; \
     done ;
     
-    @echo 'Word Count'
+    @echo '(Figure 15) +both Word Count'
     target/{{profile}}/asvisor --files isol_config/map_reduce_large_c5.json --metrics total-dur 2>&1 | grep 'total_dur'
-    @echo 'Parallel Sorting'
+    @echo '(Figure 15) +both Parallel Sorting'
     target/{{profile}}/asvisor --files isol_config/parallel_sort_c5.json --metrics total-dur 2>&1 | grep 'total_dur'
-    @echo 'Function Chain'
+    @echo '(Figure 15) +both Function Chain'
     target/{{profile}}/asvisor --files isol_config/long_chain_n15.json --metrics total-dur 2>&1 | grep 'total_dur'
 
 p99_latency: asvisor all_libos parallel_sort
@@ -264,13 +261,13 @@ p99_latency: asvisor all_libos parallel_sort
     -sudo mount fs_images/fatfs.img image_content 2>/dev/null
     sudo -E ./scripts/gen_data.py 0 0 3 '25 * 1024 * 1024'
 
-    @echo '\np99 QPS=10 (ms)'
+    @echo '\n(Figure 13(a)) p99 QPS=10 (ms)'
     ./p99tester 10 | grep 'p99'
-    @echo '\np99 QPS=20'
+    @echo '\n(Figure 13(a)) p99 QPS=20'
     ./p99tester 20 | grep 'p99'
-    @echo '\np99 QPS=40'
+    @echo '\n(Figure 13(a)) p99 QPS=40'
     ./p99tester 40 | grep 'p99'
-    @echo '\np99 QPS=80'
+    @echo '\n(Figure 13(a)) p99 QPS=80'
     ./p99tester 80 | grep 'p99'
 
 resource_consume: asvisor all_libos parallel_sort
@@ -281,24 +278,24 @@ resource_consume: asvisor all_libos parallel_sort
     sudo -E ./scripts/gen_data.py 0 0 5 '25 * 1024 * 1024'
 
     @sleep 3
-    @echo '\nnumber of instances=20'
+    @echo '\n(Figure 13(b)) number of instances=20'
     ./resourcetester 20 | grep 'total consume mem:'
     mv monitor.log as_parallel_sort_resouce_c5_25_20.txt
 
     @sleep 3
-    @echo '\nnumber of instances=40'
+    @echo '\n(Figure 13(b)) number of instances=40'
     ./resourcetester 40 | grep 'total consume mem:'
     mv monitor.log as_parallel_sort_resouce_c5_25_40.txt
 
     @sleep 3
-    @echo '\nnumber of instances=60'
+    @echo '\n(Figure 13(b)) number of instances=60'
     ./resourcetester 60 | grep 'total consume mem:'
     mv monitor.log as_parallel_sort_resouce_c5_25_60.txt
 
     @sleep 3
-    @echo '\nnumber of instances=80'
+    @echo '\n(Figure 13(b)) number of instances=80'
     ./resourcetester 80 | grep 'total consume mem:'
     mv monitor.log as_parallel_sort_resouce_c5_25_80.txt
 
-    @echo '\n Cost CPU: '
+    @echo '\n(Figure 13(b)) Cost CPU: '
     -./scripts/comp_resource.py
