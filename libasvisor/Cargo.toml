@@ -13,7 +13,7 @@ lazy_static = "1.4.0"
 as_hostcall = { workspace = true }
 
 libloading = "0.8.0"
-anyhow = "1.0.75"
+anyhow = "1.0.96"
 lazy_static = "1.4.0"
 log = "0.4.20"
 env_logger = "0.10.0"
