@@ -12,7 +12,7 @@ log = "0.4.20"
 tokio = { version = "1.32.0", features = ["macros", "rt-multi-thread"] }
 axum = { version = "0.6.20", features = ["macros"] }
 serde = { version = "1.0.188" }
-anyhow = { version = "1.0.75" }
+anyhow = { version = "1.0.97" }
 
 [features]
 namespace = ["libasvisor/namespace"]
