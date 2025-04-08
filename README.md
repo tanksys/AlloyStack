@@ -71,3 +71,17 @@ The breakdown, P99 latency and resource consumption experiments are conducted ba
 ```bash
 AlloyStack$ just breakdown && just p99_latency && just resource_consume
 ```
+
+## Citation
+
+Please check our paper for technical details and full results.
+
+```
+@inproceedings{you2025alloystack,
+ author = {You, Jianing and Chen, Kang and Zhao, Laiping and Li, Yiming and Chen, Yichi and Du, Yuxuan and Wang, Yanjie and Wen, Luhang and Hu, Keyang and Li, Keqiu},
+ booktitle = {Proceedings of the Twentieth European Conference on Computer Systems},
+ doi = {10.1145/3689031.3717490},
+ title = {AlloyStack: A Library Operating System for Serverless Workflow Applications},
+ year = {2025}
+}
+```
