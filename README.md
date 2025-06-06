@@ -3,7 +3,7 @@
 [![CI](https://github.com/anti-entropy123/AlloyStack/actions/workflows/main.yml/badge.svg)](https://github.com/anti-entropy123/AlloyStack/actions/workflows/main.yml)
 
 ## Abstract
-AlloyStack is a library OS designed for serverless workflow applications. It reduces cold start latency through on-demand loading and optimizes intermediate data transfer overhead via reference passing. We provide user-friendly tools and scripts in the AlloyStack code repository to automate the
+AlloyStack is a library OS designed for serverless workflow applications. **Portions of the library code are derived from [RuxOS](https://github.com/syswonder/ruxos/tree/main).** It reduces cold start latency through on-demand loading and optimizes intermediate data transfer overhead via reference passing. We provide user-friendly tools and scripts in the AlloyStack code repository to automate the
 build and testing processes. This document guides users in reproducing the experimental results.
 
 ## Artifact check-list
