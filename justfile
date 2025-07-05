@@ -204,7 +204,7 @@ py_end_to_end_latency: asvisor all_libos all_py_wasm
     -sudo mount fs_images/fatfs.img image_content 2>/dev/null
     sudo -E ./scripts/gen_data.py 1 '1 * 1024 * 1024' 1 '1 * 1024 * 1024'
 
-    sleep 3
+    sleep 5
     @echo 'Python word count cost: '
     target/{{profile}}/asvisor --files isol_config/wasmtime_cpython_wordcount_c1.json --metrics total-dur 2>&1 | grep 'total_dur'
     
