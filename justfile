@@ -149,6 +149,12 @@ asvisor:
     cargo build {{ release_flag }}
 
 cold_start_latency: asvisor all_libos
+    #!/bin/bash
+    if [ -z "$SUDO_PASSWD" ]; then
+        echo "Error: SUDO_PASSWD environment variable is not set"
+        echo "Please set it with: export SUDO_PASSWD=<your_password>" && exit 1
+    fi
+
     just rust_func hello_world
     just rust_func load_all
     @-./scripts/del_tap.sh 2>/dev/null

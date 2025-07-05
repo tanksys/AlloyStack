@@ -45,7 +45,7 @@ Additionally, the repository of AlloyStack is integrated with GitHub Actions. Th
 ## Evaluation
 ### Cold start latency
 
-The cold start of AlloyStack can be categorized into two scenarios: enabling and disabling on-demand loading. The approximate cold start latency is measured using the execution time of `hello_world` and `load_all`, respectively. The following script can be used to automate the testing process. 
+The cold start of AlloyStack can be categorized into two scenarios: enabling and disabling on-demand loading. The approximate cold start latency is measured using the execution time of `hello_world` and `load_all`, respectively. You have to set the `SUDO_PASSWD` environment variable before running this test using the command `export SUDO_PASSWD=<your_password>`, since some parts of the test require it. The following script can be used to automate the testing process.
 
 ```bash
 AlloyStack$ just cold_start_latency
