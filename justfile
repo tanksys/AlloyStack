@@ -143,6 +143,7 @@ init:
     rustup override set 'nightly-2023-12-01'
     rustup target add x86_64-unknown-linux-musl
     [ -f fs_images/fatfs.img ] || unzip fs_images/fatfs.zip -d fs_images
+    [ -d image_content ] || mkdir image_content
 
 asvisor:
     cargo build {{ release_flag }}
