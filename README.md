@@ -36,31 +36,8 @@ AlloyStack/
 
 To run a new test application on AlloyStack, user need to develop functions in the `user/` directory. Then, edit the workflow specification files in the `isol_config/` directory to declare how functions compose the workflow, specify dependencies on LibOS modules, and define input parameters for functions. If the workflow involves reading datasets from files, the datasets must also be added to the file system image. Please use the following command to extract the provided image archive, which contains the source code for the Python benchmarks.
 
-```bash
-AlloyStack$ just init
-```
+For detailed documentation, please refer to [AlloyStack User Guide](./doc/).
 
-Additionally, the repository of AlloyStack is integrated with GitHub Actions. Therefore, tools such as [act](https://github.com/nektos/act) can be used locally to quickly run some basic test cases via Docker.
-
-## [Testing a Workflow](./doc/testing_a_workflow.md)
-
-Taking map_reduce workflow as an example.
-
-Build System Services:
-```
-AlloyStack$ just all_libos
-```
-
-Build Workflow Functions:
-```
-AlloyStack$ just rust_func file_reader
-AlloyStack$ just rust_func mapper
-AlloyStack$ just rust_func reducer
-```
-Execute the Workflow:
-```
-AlloyStack$ target/release/asvisor --files isol_config/map_reduce.json
-```
 ## Evaluation
 ### Cold start latency
 

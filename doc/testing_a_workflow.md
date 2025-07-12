@@ -49,11 +49,7 @@ AlloyStack$ target/release/asvisor --files isol_config/map_reduce.json
     }
   ]
 }
-```
 
-#### Execution Output
-
-```
 # Stage 1: File Reading (Parallel)
 file_reader: slot_name: part-0
 file_reader: read_size=9881
