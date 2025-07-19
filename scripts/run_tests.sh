@@ -11,15 +11,20 @@ declare -A results
 
 # 获取脚本参数（feature）
 feature_arg=""
-if [ $# -gt 0 ]; then
-    feature_arg="--features $1"
-fi
+release_arg=""
+for arg in "$@"; do
+    if [[ $arg == --features* ]]; then
+        feature_arg="$arg"
+    elif [[ $arg == --release ]]; then
+        release_arg="--release"
+    fi
+done
 
 for group in "${!test_groups[@]}"; do
     names=${test_groups[$group]}
     
     for name in $names; do
-        output=$(RUST_LOG=info cargo run $feature_arg -- --files "isol_config/$name.json")
+        output=$(RUST_LOG=info cargo run $release_arg $feature_arg -- --files "isol_config/$name.json")
         if [ $? -eq 0 ]; then
             results[$name]="passed"
             ((passed_count++)) # 增加通过计数
