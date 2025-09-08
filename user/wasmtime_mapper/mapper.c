@@ -124,7 +124,7 @@ int main(int argc, char* argv[]) {
         free(slot_name[i]); // 释放 strdup 分配的内存
         free(buffer[i]);    // 释放 buffer
     }
-    write(1, "mapper end!\n", sizeof("mapper end!\n"));
-    // printf("mapper_%d finished!\n", id);
+    // write(1, "mapper end!\n", strlen("mapper end!\n"));
+    printf("mapper_%d finished!\n", id);
     return 0;
 }

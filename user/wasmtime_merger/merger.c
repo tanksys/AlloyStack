@@ -5,8 +5,13 @@
 __attribute__((import_module("env"), import_name("buffer_register"))) void buffer_register(void *slot_name, int name_size, void *buffer, int buffer_size);
 __attribute__((import_module("env"), import_name("access_buffer"))) void access_buffer(void *slot_name, int name_size, void *buffer, int buffer_size);
 
+#ifndef MAX_ARRAY_LENGTH
 #define MAX_ARRAY_LENGTH 20000000
+#endif
+
+#ifndef MAX_BUFFER_SIZE
 #define MAX_BUFFER_SIZE 200000000
+#endif
 
 int result[MAX_ARRAY_LENGTH];
 

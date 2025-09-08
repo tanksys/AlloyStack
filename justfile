@@ -87,10 +87,6 @@ profile := if enable_release == "1" {
 symbol_link func_name:
     @ln -s $(pwd)/user/{{ func_name }}/target/{{target}}/{{profile}}/lib{{ func_name }}.so target/{{profile}}/
 
-# 添加在文件顶部的变量部分
-c_custom_flags := ""
-
-# 修改 wasm_func 规则，在 cc 命令中添加自定义标志
 wasm_func func_name:
     cd user/{{ func_name }} \
         && cargo build {{ release_flag }} \
@@ -98,16 +94,10 @@ wasm_func func_name:
         && cc {{cc_flags_p1}} \
             target/{{target}}/{{profile}}/lib{{ func_name }}.a \
             {{cc_flags_p2}} \
-            {{ c_custom_flags }} \
             -o target/{{target}}/{{profile}}/lib{{ func_name }}.so
     
     @-rm target/{{profile}}/lib{{ func_name }}.so
     just symbol_link {{ func_name }}
-
-# 添加新的规则用于大数据集的 wordcount
-c_wordcount_big_data: 
-    just c_custom_flags="-DMAX_BUFFER_SIZE=1000000 -DMAX_SLOT_NUM=10 -DMAX_WORDS=18000000" wasm_func wasmtime_mapper
-    just c_custom_flags="-DMAX_BUFFER_SIZE=1000000 -DMAX_SLOT_NUM=10 -DMAX_WORDS=18000000" wasm_func wasmtime_reducer
 
 c_wordcount: 
     just wasm_func wasmtime_mapper
