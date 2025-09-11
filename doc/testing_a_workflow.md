@@ -93,10 +93,10 @@ export CC="/opt/wasi-sdk/bin/clang"
 export CPP="/opt/wasi-sdk/bin/clang++"
 
 wasmtime_wordcount：
-./user/wasmtime_mapper/build.sh &&  ./user/wasmtime_reducer/build.sh 
+just cwasm_compile_wordcount *args:
 
 wasmtime_parallel_sort：
-./user/wasmtime_checker/build.sh &&  ./user/wasmtime_merger/build.sh && ./user/wasmtime_sorter/build.sh &&  ./user/wasmtime_spliter/build.sh
+just cwasm_compile_parallel_sort *args:
 
 Run before testing or compile other modules:
 unset CC && export CC=/usr/bin/clang && echo "CC is now: $CC" 
