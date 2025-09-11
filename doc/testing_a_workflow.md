@@ -84,14 +84,20 @@ The same 3-step process applies to any workflow:
 
 ### Custom parameters recompile for Wasmtime module
 ```
+Pre-install wasmtime-cli 22.0.0 、WASI-sdk
+
 Modify the build.sh script in the user corresponding function directory.
 
+User manually sets environment variables
+export CC="/opt/wasi-sdk/bin/clang"
+export CPP="/opt/wasi-sdk/bin/clang++"
+
 wasmtime_wordcount：
-source ~/.zshrc && ./user/wasmtime_mapper/build.sh &&  ./user/wasmtime_reducer/build.sh 
+./user/wasmtime_mapper/build.sh &&  ./user/wasmtime_reducer/build.sh 
 
 wasmtime_parallel_sort：
-source ~/.zshrc && ./user/wasmtime_checker/build.sh &&  ./user/wasmtime_merger/build.sh && ./user/wasmtime_sorter/build.sh &&  ./user/wasmtime_spliter/build.sh
+./user/wasmtime_checker/build.sh &&  ./user/wasmtime_merger/build.sh && ./user/wasmtime_sorter/build.sh &&  ./user/wasmtime_spliter/build.sh
 
-Run before testing:
+Run before testing or compile other modules:
 unset CC && export CC=/usr/bin/clang && echo "CC is now: $CC" 
 ```

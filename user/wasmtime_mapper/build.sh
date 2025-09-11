@@ -1,37 +1,21 @@
-# 激活环境：source ~/.zshrc 
-# 测试时记得重新运行  just c_wordcount
-# unset CC && export CC=/usr/bin/clang && echo "CC is now: $CC" 测试前运行
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Select toolchain via TOOLCHAIN env: wasi|emscripten (default: wasi)
-TOOLCHAIN="${TOOLCHAIN:-wasi}"
+# Activate environment: export CPP="/opt/wasi-sdk/bin/clang++" &&  export CC="/opt/wasi-sdk/bin/clang"
+# Before compiling other modules: unset CC && export CC=/usr/bin/clang && echo "CC is now: $CC" 
 
-case "$TOOLCHAIN" in
-  wasi)
-    export CC="${CC:-/opt/wasi-sdk/bin/clang}"
-    export CPP="${CPP:-/opt/wasi-sdk/bin/clang++}"
-    ;;
-  emscripten)
-    export CC="${CC:-emcc}"
-    export CPP="${CPP:-em++}"
-    ;;
-  *)
-    echo "Unknown TOOLCHAIN: $TOOLCHAIN"; exit 1
-    ;;
- esac
-
-echo "Using CC=$CC, CPP=$CPP"
 
 # Ensure we run from the script directory so relative paths work
 cd "$(dirname "$0")"
 
-# $CPP mapper_new.cpp -o mapper.wasm -fno-exceptions -fno-rtti -ffast-math -funroll-loops -fomit-frame-pointer -Ofast
+# Compile C to WASM with optimizations and specified macros
+# Data volume: sudo -E ./scripts/gen_data.py 3 '1' 3 '25'
 $CC mapper.c -o mapper.wasm -O3 \
   -DMAX_WORD_LENGTH=20 \
   -DMAX_WORDS=1000 \
   -DMAX_SLOT_NUM=100 \
   -DMAX_BUFFER_SIZE=50000
+# $CPP mapper_new.cpp -o mapper.wasm -fno-exceptions -fno-rtti -ffast-math -funroll-loops -fomit-frame-pointer -Ofast
 
 wasmtime compile --target x86_64-unknown-none -W threads=n,tail-call=n mapper.wasm
 

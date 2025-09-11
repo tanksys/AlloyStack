@@ -286,3 +286,29 @@ resource_consume: asvisor all_libos parallel_sort
     mv monitor.log as_parallel_sort_resouce_c5_25_80.txt
 
     ./scripts/comp_resource.py
+
+# WebAssembly compilation tasks using compile_wasm.sh script
+# Unified CWASM compilation entry point with customizable parameters
+cwasm_compile:
+    @echo "CWASM Compilation Tasks Available:"
+    @echo "  just cwasm_compile_help                  - Show help information"
+    @echo "  just cwasm_compile_all [OPTIONS]         - Compile all components with default settings, supports optional parameters"
+    @echo "  just cwasm_compile_wordcount [OPTIONS]   - Compile only wordcount workflow components, supports optional parameters"
+    @echo "  just cwasm_compile_parallel_sort [OPTIONS] - Compile only parallel_sort workflow components, supports optional parameters"
+    @echo ""
+    @echo "Optional parameters for all tasks:"
+    @echo "  --mode MODE         - Specify build mode (debug, release)"
+    @echo "  --concurrency N     - Specify concurrency level (1, 3, 5)"
+    @echo "  --cflags FLAGS      - Custom CFLAGS compilation parameters"
+
+cwasm_compile_help:
+    ./scripts/compile_wasm.sh --help
+
+cwasm_compile_all *args:
+    ./scripts/compile_wasm.sh {{args}}
+
+cwasm_compile_wordcount *args:
+    ./scripts/compile_wasm.sh --workflow wordcount {{args}}
+
+cwasm_compile_parallel_sort *args:
+    ./scripts/compile_wasm.sh --workflow parallel_sort {{args}}

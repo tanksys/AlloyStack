@@ -1,25 +1,5 @@
-# 激活环境：source ~/.zshrc 
-# 测试时记得重新运行  just c_wordcount
-
-
-# Select toolchain via TOOLCHAIN env: wasi|emscripten (default: wasi)
-TOOLCHAIN="${TOOLCHAIN:-wasi}"
-
-case "$TOOLCHAIN" in
-  wasi)
-    export CC="${CC:-/opt/wasi-sdk/bin/clang}"
-    export CPP="${CPP:-/opt/wasi-sdk/bin/clang++}"
-    ;;
-  emscripten)
-    export CC="${CC:-emcc}"
-    export CPP="${CPP:-em++}"
-    ;;
-  *)
-    echo "Unknown TOOLCHAIN: $TOOLCHAIN"; exit 1
-    ;;
- esac
-
-echo "Using CC=$CC, CPP=$CPP"
+# Activate environment：export CPP="/opt/wasi-sdk/bin/clang++" &&  export CC="/opt/wasi-sdk/bin/clang"
+# Before compiling other modules: unset CC && export CC=/usr/bin/clang && echo "CC is now: $CC" 
 
 # Ensure we run from the script directory so relative paths work
 cd "$(dirname "$0")"

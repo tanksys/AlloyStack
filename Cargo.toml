@@ -17,6 +17,10 @@ members = [
 # In current implementation, as_std has conflict features (e.g. `panic_def` and 
 # `unwinding`). Of course, if add "user/" to members, will also have problem of 
 # feature gate. 
+#
+# When building projects and user applications, if there are invalid soft links, 
+# you need to manually clean up the user crate cache.
+
 exclude = ["user/", "common_service/", "baseline/"]
 default-members = ["bins/asvisor"]
 resolver = "2"
