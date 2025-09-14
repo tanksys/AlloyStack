@@ -154,7 +154,7 @@ compile_component() {
     local cargo_dir="wasmtime_$component"
     local output_dir="target/$TARGET_DIR/$BUILD_MODE"
     local lib_name="libwasmtime_$component.so"
-    local symlink_path="/home/as-group/wyd/final/AlloyStack/target/$BUILD_MODE/$lib_name"
+    local symlink_path="./AlloyStack/target/$BUILD_MODE/$lib_name"
     
     echo "\n===== Compiling $component ====="
     

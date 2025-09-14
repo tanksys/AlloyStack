@@ -27,13 +27,13 @@ cargo build --target x86_64-unknown-none --release && cc \
   -shared \
   -o target/x86_64-unknown-none/release/libwasmtime_mapper.so
 
-SYMLINK_PATH="/home/as-group/wyd/final/AlloyStack/target/release/libwasmtime_mapper.so"
+SYMLINK_PATH="./target/release/libwasmtime_mapper.so"
 if [ -L "$SYMLINK_PATH" ]; then
   echo "Symlink already exists, updating..."
   rm "$SYMLINK_PATH"
 fi
 
-ln -s /home/as-group/wyd/final/AlloyStack/user/wasmtime_mapper/target/x86_64-unknown-none/release/libwasmtime_mapper.so /home/as-group/wyd/final/AlloyStack/target/release/libwasmtime_mapper.so
+ln -s ./user/wasmtime_mapper/target/x86_64-unknown-none/release/libwasmtime_mapper.so ./target/release/libwasmtime_mapper.so
 
 # cargo build --target x86_64-unknown-none && cc \
 #   -Wl,--gc-sections -nostdlib \

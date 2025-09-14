@@ -3,7 +3,7 @@ import re
 from collections import Counter
 
 # 读取fake_data_0.txt文件
-file_path = '/home/as-group/wyd/final/AlloyStack/image_content/fake_data_0.txt'
+file_path = './image_content/fake_data_0.txt'
 
 with open(file_path, 'r') as f:
     content = f.read()

@@ -28,13 +28,13 @@ cargo build --target x86_64-unknown-none --release && cc \
   -o target/x86_64-unknown-none/release/libwasmtime_reducer.so
 
 # Create symlink, handling the case where it already exists
-SYMLINK_PATH="/home/as-group/wyd/final/AlloyStack/target/release/libwasmtime_reducer.so"
+SYMLINK_PATH="./target/release/libwasmtime_reducer.so"
 if [ -L "$SYMLINK_PATH" ]; then
   echo "Symlink already exists, updating..."
   rm "$SYMLINK_PATH"
 fi
 
-ln -s /home/as-group/wyd/final/AlloyStack/user/wasmtime_reducer/target/x86_64-unknown-none/release/libwasmtime_reducer.so /home/as-group/wyd/final/AlloyStack/target/release/libwasmtime_reducer.so
+ln -s ./user/wasmtime_reducer/target/x86_64-unknown-none/release/libwasmtime_reducer.so ./target/release/libwasmtime_reducer.so
 
 
 # cargo build --target x86_64-unknown-none && cc \
