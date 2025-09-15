@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Activate environment: export CPP="/opt/wasi-sdk/bin/clang++" &&  export CC="/opt/wasi-sdk/bin/clang"
-# Before compiling other modules: unset CPP && export CPP=/usr/bin/clang && echo "CPP is now: $CPP" 
+# Before compiling other modules: unset CPP && export CPP=/usr/bin/clang++ && echo "CPP is now: $CPP" 
 
 cd "$(dirname "$0")"
 $CPP merger.cpp -o merger.wasm -fno-exceptions -fno-rtti -ffast-math -funroll-loops -fomit-frame-pointer -Ofast -DMAX_ARRAY_LENGTH=1600000   -DMAX_BUFFER_SIZE=15000000  

@@ -2,13 +2,13 @@
 set -euo pipefail
 
 # Activate environment：export CPP="/opt/wasi-sdk/bin/clang++" &&  export CC="/opt/wasi-sdk/bin/clang"
-# Before compiling other modules: unset CC && export CC=/usr/bin/clang && echo "CC is now: $CC" 
+# Before compiling other modules: unset CPP && export CPP=/usr/bin/clang++ && echo "CPP is now: $CPP"
 
 # Help information
 show_help() {
     echo "Usage: $0 [OPTIONS] [COMPONENT...]"
     echo ""
-    echo "Compile WebAssembly modules, supporting two workflows: wordcount and parallel_sort."
+    echo "Compile C++ WebAssembly modules, supporting two workflows: wordcount and parallel_sort."
     echo "If no components are specified, all components will be compiled."
     echo ""
     echo "Options:"
@@ -148,19 +148,40 @@ fi
 # Compilation function
 compile_component() {
     local component=$1
-    local source_file="$component.c"
+    local source_file=""
     local wasm_file="$component.wasm"
-    local cwasm_file="$component.cwasm"
     local cargo_dir="wasmtime_$component"
     local output_dir="target/$TARGET_DIR/$BUILD_MODE"
     local lib_name="libwasmtime_$component.so"
-    local symlink_path="./AlloyStack/target/$BUILD_MODE/$lib_name"
+    local symlink_path="./target/$BUILD_MODE/$lib_name"
     
     echo "\n===== Compiling $component ====="
     
     # Enter component directory
     cd "$WORKSPACE/user/$cargo_dir"
     echo "Current directory: $(pwd)"
+    
+    # Determine source file based on component
+    case $component in
+        mapper)
+            source_file="mapper_new.cpp"
+            ;;
+        reducer)
+            source_file="reducer_new.cpp"
+            ;;
+        checker)
+            source_file="checker.cpp"
+            ;;
+        merger)
+            source_file="merger.cpp"
+            ;;
+        sorter)
+            source_file="sorter.cpp"
+            ;;
+        spliter)
+            source_file="spliter.cpp"
+            ;;
+    esac
     
     # Set compilation parameters
     if [[ -n "$CUSTOM_CFLAGS" ]]; then
@@ -173,34 +194,30 @@ compile_component() {
             mapper|reducer)
                 # Wordcount workflow component parameters
                 if [[ $CONCURRENCY -eq 1 ]]; then
-                    CFLAGS="-DMAX_WORD_LENGTH=20 -DMAX_WORDS=1000 -DMAX_SLOT_NUM=100 -DMAX_BUFFER_SIZE=50000"
+                    CFLAGS="-fno-exceptions -fno-rtti -ffast-math -funroll-loops -fomit-frame-pointer -Ofast -DMAX_WORD_LENGTH=20 -DMAX_WORDS=1000 -DMAX_SLOT_NUM=100 -DMAX_BUFFER_SIZE=50000"
                 elif [[ $CONCURRENCY -eq 3 ]]; then
-                    CFLAGS="-DMAX_WORD_LENGTH=20 -DMAX_WORDS=5000 -DMAX_SLOT_NUM=100 -DMAX_BUFFER_SIZE=250000"
+                    CFLAGS="-fno-exceptions -fno-rtti -ffast-math -funroll-loops -fomit-frame-pointer -Ofast -DMAX_WORD_LENGTH=20 -DMAX_WORDS=5000 -DMAX_SLOT_NUM=100 -DMAX_BUFFER_SIZE=250000"
                 elif [[ $CONCURRENCY -eq 5 ]]; then
-                    CFLAGS="-DMAX_WORD_LENGTH=20 -DMAX_WORDS=10000 -DMAX_SLOT_NUM=100 -DMAX_BUFFER_SIZE=500000"
+                    CFLAGS="-fno-exceptions -fno-rtti -ffast-math -funroll-loops -fomit-frame-pointer -Ofast -DMAX_WORD_LENGTH=20 -DMAX_WORDS=10000 -DMAX_SLOT_NUM=100 -DMAX_BUFFER_SIZE=500000"
                 fi
                 ;;
             spliter|sorter|merger|checker)
-                 # Parallel sort workflow component parameters
-                if [[ $CONCURRENCY -eq 1 ]]; then
-                    CFLAGS="-DMAX_ARRAY_LENGTH=1600000 -DMAX_BUFFER_SIZE=15000000"
-                elif [[ $CONCURRENCY -eq 3 ]]; then
-                    CFLAGS="-DMAX_ARRAY_LENGTH=8000000 -DMAX_BUFFER_SIZE=80000000"
-                elif [[ $CONCURRENCY -eq 5 ]]; then
-                    CFLAGS="-DMAX_ARRAY_LENGTH=8000000 -DMAX_BUFFER_SIZE=80000000"
-                fi
+                # Parallel sort workflow component parameters
+                CFLAGS="-fno-exceptions -fno-rtti -ffast-math -funroll-loops -fomit-frame-pointer -Ofast -DMAX_ARRAY_LENGTH=1600000 -DMAX_BUFFER_SIZE=15000000"
                 ;;
         esac
         echo "Compilation parameters: $CFLAGS"
     fi
     
-    # Compile C to WASM
-    echo "Compiling C to WASM..."
-    $CC $source_file -o $wasm_file -O3 $CFLAGS
+    # Compile C++ to WASM
+    echo "Compiling C++ to WASM..."
+    $CPP $source_file -o $wasm_file $CFLAGS
     
-    # Compile WASM to CWASM
-    echo "Compiling WASM to CWASM..."
-    wasmtime compile --target $TARGET_DIR -W threads=n,tail-call=n $wasm_file
+    # Compile WASM to CWASM if component is mapper or reducer
+    if [[ $component == "mapper" || $component == "reducer" ]]; then
+        echo "Compiling WASM to CWASM..."
+        wasmtime compile --target $TARGET_DIR -W threads=n,tail-call=n $wasm_file
+    fi
     
     # Compile Rust code and create shared library
     echo "Compiling Rust code and creating shared library..."

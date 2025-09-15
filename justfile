@@ -312,3 +312,30 @@ cwasm_compile_wordcount *args:
 
 cwasm_compile_parallel_sort *args:
     ./scripts/compile_wasm.sh --workflow parallel_sort {{args}}
+
+
+# C++ WebAssembly compilation tasks using compile_wasm_cpp.sh script
+# Unified C++ CWASM compilation entry point with customizable parameters
+ccwasm_compile:
+    @echo "C++ CWASM Compilation Tasks Available:"
+    @echo "  just ccwasm_compile_help                  - Show help information"
+    @echo "  just ccwasm_compile_all [OPTIONS]         - Compile all C++ components with default settings, supports optional parameters"
+    @echo "  just ccwasm_compile_wordcount [OPTIONS]   - Compile only C++ wordcount workflow components, supports optional parameters"
+    @echo "  just ccwasm_compile_parallel_sort [OPTIONS] - Compile only C++ parallel_sort workflow components, supports optional parameters"
+    @echo ""
+    @echo "Optional parameters for all tasks:"
+    @echo "  --mode MODE         - Specify build mode (debug, release)"
+    @echo "  --concurrency N     - Specify concurrency level (1, 3, 5)"
+    @echo "  --cflags FLAGS      - Custom CFLAGS compilation parameters"
+
+ccwasm_compile_help:
+    ./scripts/compile_wasm_cpp.sh --help
+
+ccwasm_compile_all *args:
+    ./scripts/compile_wasm_cpp.sh {{args}}
+
+ccwasm_compile_wordcount *args:
+    ./scripts/compile_wasm_cpp.sh --workflow wordcount {{args}}
+
+ccwasm_compile_parallel_sort *args:
+    ./scripts/compile_wasm_cpp.sh --workflow parallel_sort {{args}}

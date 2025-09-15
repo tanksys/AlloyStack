@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Activate environment: export CPP="/opt/wasi-sdk/bin/clang++" &&  export CC="/opt/wasi-sdk/bin/clang"
-# Before compiling other modules: unset CPP && export CPP=/usr/bin/clang && echo "CPP is now: $CPP" 
+# Before compiling other modules: unset CPP && export CPP=/usr/bin/clang++ && echo "CPP is now: $CPP" 
 
 cd "$(dirname "$0")"
 $CPP mapper_new.cpp -o mapper.wasm -fno-exceptions -fno-rtti -ffast-math -funroll-loops -fomit-frame-pointer -Ofast -DMAX_WORD_LENGTH=20 -DMAX_WORDS=18000000 -DMAX_SLOT_NUM=10 -DMAX_BUFFER_SIZE=500000
