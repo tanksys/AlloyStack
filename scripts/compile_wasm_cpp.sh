@@ -194,16 +194,22 @@ compile_component() {
             mapper|reducer)
                 # Wordcount workflow component parameters
                 if [[ $CONCURRENCY -eq 1 ]]; then
-                    CFLAGS="-fno-exceptions -fno-rtti -ffast-math -funroll-loops -fomit-frame-pointer -Ofast -DMAX_WORD_LENGTH=20 -DMAX_WORDS=1000 -DMAX_SLOT_NUM=100 -DMAX_BUFFER_SIZE=50000"
+                    CFLAGS="-fno-exceptions -fno-rtti -ffast-math -funroll-loops -fomit-frame-pointer -Ofast -DMAX_SLOT_NUM=10 -DMAX_WORDS=18000000 -DMAX_BUFFER_SIZE=500000"
                 elif [[ $CONCURRENCY -eq 3 ]]; then
-                    CFLAGS="-fno-exceptions -fno-rtti -ffast-math -funroll-loops -fomit-frame-pointer -Ofast -DMAX_WORD_LENGTH=20 -DMAX_WORDS=5000 -DMAX_SLOT_NUM=100 -DMAX_BUFFER_SIZE=250000"
+                    CFLAGS="-fno-exceptions -fno-rtti -ffast-math -funroll-loops -fomit-frame-pointer -Ofast -DMAX_SLOT_NUM=10 -DMAX_WORDS=18000000 -DMAX_BUFFER_SIZE=500000"
                 elif [[ $CONCURRENCY -eq 5 ]]; then
-                    CFLAGS="-fno-exceptions -fno-rtti -ffast-math -funroll-loops -fomit-frame-pointer -Ofast -DMAX_WORD_LENGTH=20 -DMAX_WORDS=10000 -DMAX_SLOT_NUM=100 -DMAX_BUFFER_SIZE=500000"
+                    CFLAGS="-fno-exceptions -fno-rtti -ffast-math -funroll-loops -fomit-frame-pointer -Ofast -DMAX_SLOT_NUM=10 -DMAX_WORDS=18000000 -DMAX_BUFFER_SIZE=500000"
                 fi
                 ;;
             spliter|sorter|merger|checker)
                 # Parallel sort workflow component parameters
-                CFLAGS="-fno-exceptions -fno-rtti -ffast-math -funroll-loops -fomit-frame-pointer -Ofast -DMAX_ARRAY_LENGTH=1600000 -DMAX_BUFFER_SIZE=15000000"
+                if [[ $CONCURRENCY -eq 1 ]]; then
+                    CFLAGS="-fno-exceptions -fno-rtti -ffast-math -funroll-loops -fomit-frame-pointer -Ofast -DMAX_ARRAY_LENGTH=1600000 -DMAX_BUFFER_SIZE=15000000"
+                elif [[ $CONCURRENCY -eq 3 ]]; then
+                    CFLAGS="-fno-exceptions -fno-rtti -ffast-math -funroll-loops -fomit-frame-pointer -Ofast -DMAX_ARRAY_LENGTH=1600000 -DMAX_BUFFER_SIZE=15000000"
+                elif [[ $CONCURRENCY -eq 5 ]]; then
+                    CFLAGS="-fno-exceptions -fno-rtti -ffast-math -funroll-loops -fomit-frame-pointer -Ofast -DMAX_ARRAY_LENGTH=1600000 -DMAX_BUFFER_SIZE=15000000"
+                fi
                 ;;
         esac
         echo "Compilation parameters: $CFLAGS"

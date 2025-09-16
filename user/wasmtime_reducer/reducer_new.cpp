@@ -8,9 +8,17 @@
 #include <sstream>
 using namespace std;
 
+#ifndef MAX_SLOT_NUM
 #define MAX_SLOT_NUM 10
+#endif
+
+#ifndef MAX_WORDS
 #define MAX_WORDS 18000000
+#endif 
+
+#ifndef MAX_BUFFER_SIZE
 #define MAX_BUFFER_SIZE 500000
+#endif 
 
 __attribute__((import_module("env"), import_name("access_buffer"))) void access_buffer(void *slot_name, int name_size, void *buffer, int buffer_size);
 

@@ -173,11 +173,11 @@ compile_component() {
             mapper|reducer)
                 # Wordcount workflow component parameters
                 if [[ $CONCURRENCY -eq 1 ]]; then
-                    CFLAGS="-DMAX_WORD_LENGTH=20 -DMAX_WORDS=1000 -DMAX_SLOT_NUM=100 -DMAX_BUFFER_SIZE=50000"
+                    CFLAGS="-DMAX_WORD_LENGTH=20 -DMAX_WORDS=18000000 -DMAX_SLOT_NUM=100 -DMAX_BUFFER_SIZE=500000"
                 elif [[ $CONCURRENCY -eq 3 ]]; then
-                    CFLAGS="-DMAX_WORD_LENGTH=20 -DMAX_WORDS=5000 -DMAX_SLOT_NUM=100 -DMAX_BUFFER_SIZE=250000"
+                    CFLAGS="-DMAX_WORD_LENGTH=20 -DMAX_WORDS=18000000 -DMAX_SLOT_NUM=100 -DMAX_BUFFER_SIZE=500000"
                 elif [[ $CONCURRENCY -eq 5 ]]; then
-                    CFLAGS="-DMAX_WORD_LENGTH=20 -DMAX_WORDS=10000 -DMAX_SLOT_NUM=100 -DMAX_BUFFER_SIZE=500000"
+                    CFLAGS="-DMAX_WORD_LENGTH=20 -DMAX_WORDS=18000000 -DMAX_SLOT_NUM=100 -DMAX_BUFFER_SIZE=500000"
                 fi
                 ;;
             spliter|sorter|merger|checker)

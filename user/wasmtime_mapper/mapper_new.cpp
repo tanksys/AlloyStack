@@ -11,9 +11,17 @@
 
 using namespace std;
 
+#ifndef MAX_SLOT_NUM
 #define MAX_SLOT_NUM 10
+#endif
+
+#ifndef MAX_WORDS
 #define MAX_WORDS 18000000
+#endif 
+
+#ifndef MAX_BUFFER_SIZE
 #define MAX_BUFFER_SIZE 500000
+#endif 
 
 string words[MAX_WORDS];
 int counts[MAX_WORDS];

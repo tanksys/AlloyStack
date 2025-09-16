@@ -855,7 +855,7 @@ dependencies = [
 [[package]]
 name = "wasmtime"
 version = "22.0.0"
-source = "git+https://gitee.com/su-yuan-kkkkkkai/wasmtime-as-lib?branch=master#5f63a2d075104040cbe4b4177d6a4389321d72f6"
+source = "git+https://github.com/NIBRSYK16/wasmtime-as-lib.git?branch=main#c1674a280f99ebbb888872fe0e27721a43cd45da"
 dependencies = [
  "anyhow",
  "bumpalo",
