@@ -1,0 +1,49 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  labels:
+    project: mss
+    app-name: redis
+  namespace: openfaas-yjn
+spec:
+  type: NodePort
+  ports:
+    - port: 6379
+      targetPort: 6379
+      protocol: TCP
+  #ports:
+  #- port: 6379
+  selector:
+    project: mss
+    app-name: redis
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  labels:
+    project: mss
+    app-name: redis
+  namespace: openfaas-yjn
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      project: mss
+      app-name: redis
+  template:
+    metadata:
+      labels: 
+        project: mss
+        app-name: redis
+      name: redis
+    spec:
+      nodeName: dpu-003
+      containers:
+      - name: redis
+        image: redis
+        imagePullPolicy: IfNotPresent
+      restartPolicy: Always
+
