@@ -1,0 +1,12 @@
+version: 1.0
+provider:
+  name: openfaas
+  gateway: http://127.0.0.1:32222
+functions:
+  data-rw-rust:
+    lang: rust
+    handler: ./data-rw-rust
+    image: data-rw-rust:latest
+    constraints:
+     - "kubernetes.io/hostname=dpu-009"
+

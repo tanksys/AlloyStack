@@ -1,0 +1,12 @@
+apiVersion: openfaas.com/v1
+kind: Function
+metadata:
+  name: long-chain-rust
+  namespace: openfaas-fn
+spec:
+  name: long-chain-rust
+  image: long-chain-rust:latest
+  labels:
+    com.openfaas.scale.min: "1"
+    com.openfaas.scale.max: "1"
+  runtimeClassName: gvisor

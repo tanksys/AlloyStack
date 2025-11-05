@@ -1,0 +1,16 @@
+version: 1.0
+provider:
+  name: openfaas
+  gateway: http://192.168.1.183:32227
+functions:
+  long-chain-rust:
+    lang: rust
+    handler: ./long-chain-rust
+    image: long-chain-rust:latest
+    constraints:
+     - "kubernetes.io/hostname=dpu-003"
+    environment:
+      read_timeout: "60s"
+      write_timeout: "60s"
+      exec_timeout: "60s"
+

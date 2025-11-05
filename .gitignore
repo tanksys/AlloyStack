@@ -1,5 +1,6 @@
 target
 tinywasm
+venv
 wasmtime-as-lib
 image_content/*
 
