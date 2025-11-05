@@ -8,8 +8,8 @@ edition = "2021"
 crate-type = ["dylib"]
 
 [dependencies]
-ms_std = { path = "../../ms_std", features = ["alloc_def", "panic_def"] }
-ms_hostcall = { path = "../../ms_hostcall", features = [
+as_std = { path = "../../as_std", features = ["alloc_def", "panic_def"] }
+as_hostcall = { path = "../../as_hostcall", features = [
     "fatfs",
     "mmap_file_backend",
     "mm",
@@ -24,5 +24,5 @@ linked_list_allocator = "0.10.5"
 
 
 [features]
-mpk = ["ms_std/mpk"]
+mpk = ["as_std/mpk"]
 default = []

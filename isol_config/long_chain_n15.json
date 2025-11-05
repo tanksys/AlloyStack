@@ -1,0 +1,152 @@
+{
+    "services": [
+        [
+            "mm",
+            "libmm.so"
+        ],
+        [
+            "time",
+            "libtime.so"
+        ],
+        [
+            "fdtab",
+            "libfdtab.so"
+        ],
+        [
+            "stdio",
+            "libstdio.so"
+        ],
+        [
+            "fatfs",
+            "libfatfs.so"
+        ]
+    ],
+    "apps": [
+        [
+            "array_sum",
+            "libarray_sum.so"
+        ]
+    ],
+    "groups": [
+        {
+            "list": [
+                "array_sum"
+            ],
+            "args": {
+                "n": "0"
+            }
+        },
+        {
+            "list": [
+                "array_sum"
+            ],
+            "args": {
+                "n": "1"
+            }
+        },
+        {
+            "list": [
+                "array_sum"
+            ],
+            "args": {
+                "n": "2"
+            }
+        },
+        {
+            "list": [
+                "array_sum"
+            ],
+            "args": {
+                "n": "3"
+            }
+        },
+        {
+            "list": [
+                "array_sum"
+            ],
+            "args": {
+                "n": "4"
+            }
+        },
+        {
+            "list": [
+                "array_sum"
+            ],
+            "args": {
+                "n": "5"
+            }
+        },
+        {
+            "list": [
+                "array_sum"
+            ],
+            "args": {
+                "n": "6"
+            }
+        },
+        {
+            "list": [
+                "array_sum"
+            ],
+            "args": {
+                "n": "7"
+            }
+        },
+        {
+            "list": [
+                "array_sum"
+            ],
+            "args": {
+                "n": "8"
+            }
+        },
+        {
+            "list": [
+                "array_sum"
+            ],
+            "args": {
+                "n": "9"
+            }
+        },
+        {
+            "list": [
+                "array_sum"
+            ],
+            "args": {
+                "n": "10"
+            }
+        },
+        {
+            "list": [
+                "array_sum"
+            ],
+            "args": {
+                "n": "11"
+            }
+        },
+        {
+            "list": [
+                "array_sum"
+            ],
+            "args": {
+                "n": "12"
+            }
+        },
+        {
+            "list": [
+                "array_sum"
+            ],
+            "args": {
+                "n": "13"
+            }
+        },
+        {
+            "list": [
+                "array_sum"
+            ],
+            "args": {
+                "n": "14"
+            }
+        }
+    ]
+}

@@ -3,7 +3,7 @@ use std::{
     mem::ManuallyDrop,
 };
 
-use ms_hostcall::{
+use as_hostcall::{
     fatfs::{FatfsError, FatfsResult},
     types::{Fd, OpenFlags, Size, Stat, TimeSpec},
 };
@@ -59,7 +59,7 @@ pub fn fatfs_stat(fd: Fd) -> FatfsResult<Stat> {
     let st_size = f
         .stream_len()
         .map_err(|e| FatfsError::HostIOErr(e.to_string()))? as Size;
-    Ok(Stat { 
+    Ok(Stat {
         st_dev: 0,
         st_ino: 0,
         st_nlink: 0,
@@ -83,7 +83,7 @@ pub fn fatfs_stat(fd: Fd) -> FatfsResult<Stat> {
             tv_sec: 0,
             tv_nsec: 0,
         },
-        __unused: [0, 0, 0], 
+        __unused: [0, 0, 0],
     })
 }
 
@@ -100,7 +100,7 @@ pub fn fatfs_open(p: &str, flags: OpenFlags) -> FatfsResult<Fd> {
     } else {
         root_dir.open_file(p)
     }
-    .map_err(|e| FatfsError::HostIOErr(e.to_string()))?;
+    .map_err(|_e| FatfsError::Unknown)?;
 
     let fd = {
         let file = ManuallyDrop::new(Box::new(file));

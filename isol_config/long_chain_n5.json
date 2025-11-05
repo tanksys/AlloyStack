@@ -1,0 +1,78 @@
+{
+    "services": [
+        [
+            "mm",
+            "libmm.so"
+        ],
+        [
+            "time",
+            "libtime.so"
+        ],
+        [
+            "fdtab",
+            "libfdtab.so"
+        ],
+        [
+            "stdio",
+            "libstdio.so"
+        ],
+        [
+            "fatfs",
+            "libfatfs.so"
+        ]
+    ],
+    "apps": [
+        [
+            "array_sum0",
+            "libarray_sum.so"
+        ],
+        [
+            "array_sum1",
+            "libarray_sum.so"
+        ],
+        [
+            "array_sum2",
+            "libarray_sum.so"
+        ],
+        [
+            "array_sum3",
+            "libarray_sum.so"
+        ],
+        [
+            "array_sum4",
+            "libarray_sum.so"
+        ]
+    ],
+    "groups": [
+        {
+            "list": [
+                "array_sum0"
+            ],
+            "args": {"array_num": "0"}
+        },
+        {
+            "list": [
+                "array_sum1"
+            ],
+            "args": {"array_num": "1"}
+        },
+        {
+            "list": [
+                "array_sum2"
+            ],
+            "args": {"array_num": "2"}
+        },
+        {
+            "list": [
+                "array_sum3"
+            ],
+            "args": {"array_num": "3"}
+        },
+        {
+            "list": [
+                "array_sum4"
+            ],
+            "args": {"array_num": "4"}
+        }
+    ]
+}

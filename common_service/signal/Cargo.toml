@@ -1,0 +1,17 @@
+[package]
+name = "signal"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+crate-type = ["dylib"]
+
+[dependencies]
+nc = { version = "0.9.5", default-features = false }
+as_std = { path = "../../as_std", features = [] }
+as_hostcall = { path = "../../as_hostcall", features = ["signal"] }
+
+[features]
+mpk = ["as_std/mpk"]
+default = []

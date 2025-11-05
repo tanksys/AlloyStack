@@ -20,11 +20,11 @@ use smoltcp::{
 };
 
 use crate::setup_tap::exec_tap_setup;
-use ms_hostcall::{
+use as_hostcall::{
     socket::{SmoltcpError, SmoltcpResult},
     types::{NetdevName, SockFd},
 };
-use ms_std::init_context;
+use as_std::init_context;
 
 pub mod apis;
 pub mod logs;
@@ -88,7 +88,8 @@ lazy_static! {
         iface.update_ip_addrs(|ip_addrs| {
             ip_addrs
                 .push(IpCidr::new(
-                    IpAddress::v4(192, 168, 69, init_context::isolation_ctx().isol_id as u8),
+                    // IpAddress::v4(192, 168, 69, init_context::isolation_ctx().isol_id as u8),
+                    IpAddress::v4(192, 168, 69, 1),
                     24,
                 ))
                 .unwrap();

@@ -1,0 +1,141 @@
+{
+  "services": [
+    [
+      "fdtab",
+      "libfdtab.so"
+    ],
+    [
+      "stdio",
+      "libstdio.so"
+    ],
+    [
+      "mm",
+      "libmm.so"
+    ],
+    [
+      "mmap_file_backend",
+      "libmmap_file_backend.so"
+    ],
+    [
+      "socket",
+      "libsocket.so"
+    ],
+    [
+      "time",
+      "libtime.so"
+    ],
+    [
+      "fatfs",
+      "libfatfs.so"
+    ]
+  ],
+  "apps": [
+    [
+      "load_all",
+      "libload_all.so"
+    ],
+    [
+      "file_reader",
+      "libfile_reader.so"
+    ],
+    [
+      "sorter",
+      "libsorter.so"
+    ],
+    [
+      "splitter",
+      "libsplitter.so"
+    ],
+    [
+      "merger",
+      "libmerger.so"
+    ],
+    [
+      "checker",
+      "libchecker.so"
+    ]
+  ],
+  "groups": [
+    {
+      "list": [
+        "load_all"
+      ],
+      "args": {}
+    },
+    {
+      "list": [
+        {
+          "name": "file_reader",
+          "args": {
+            "slot_name": "input-part-0",
+            "input_file": "sort_data_0.txt"
+          }
+        },
+        {
+          "name": "file_reader",
+          "args": {
+            "slot_name": "input-part-1",
+            "input_file": "sort_data_1.txt"
+          }
+        },
+        {
+          "name": "file_reader",
+          "args": {
+            "slot_name": "input-part-2",
+            "input_file": "sort_data_2.txt"
+          }
+        },
+        {
+          "name": "file_reader",
+          "args": {
+            "slot_name": "input-part-3",
+            "input_file": "sort_data_3.txt"
+          }
+        },
+        {
+          "name": "file_reader",
+          "args": {
+            "slot_name": "input-part-4",
+            "input_file": "sort_data_4.txt"
+          }
+        }
+      ],
+      "args": {}
+    },
+    {
+      "list": [
+        "sorter",
+        "sorter",
+        "sorter",
+        "sorter",
+        "sorter"
+      ],
+      "args": {
+        "sorter_num": "5",
+        "merger_num": "5"
+      }
+    },
+    {
+      "list": [
+        "splitter",
+        "splitter",
+        "splitter",
+        "splitter",
+        "splitter"
+      ],
+      "args": {}
+    },
+    {
+      "list": [
+        "merger",
+        "merger",
+        "merger",
+        "merger",
+        "merger"
+      ],
+      "args": {
+        "sorter_num": "5"
+      }
+    }
+  ]
+}

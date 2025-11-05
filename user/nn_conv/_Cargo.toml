@@ -9,9 +9,9 @@ build = "../../build_user.rs"
 crate-type = ["dylib"]
 
 [dependencies]
-ms_std = { path = "../../ms_std", features = ["alloc_def", "unwinding"] }
-ms_hostcall = { path = "../../ms_hostcall" }
-ms_std_proc_macro = { path = "../../ms_std_proc_macro" }
+as_std = { path = "../../as_std", features = ["alloc_def", "unwinding"] }
+as_hostcall = { path = "../../as_hostcall" }
+as_std_proc_macro = { path = "../../as_std_proc_macro" }
 
 burn = { path = "/home/yjn/rust_project/burn/burn", default-features = false, features = [
     "ndarray-no-std",
@@ -20,5 +20,5 @@ serde = { version = "1.0.193", default-features = false, features = ["derive"] }
 thiserror-no-std = "2.0.2"
 
 [features]
-mpk = ["ms_std/mpk"]
+mpk = ["as_std/mpk"]
 default = []

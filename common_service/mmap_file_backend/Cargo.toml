@@ -9,8 +9,8 @@ edition = "2021"
 crate-type = ["dylib"]
 
 [dependencies]
-ms_std = { path = "../../ms_std" }
-ms_hostcall = { path = "../../ms_hostcall", features = [
+as_std = { path = "../../as_std" }
+as_hostcall = { path = "../../as_hostcall", features = [
     "fatfs",
     "mmap_file_backend",
 ] }
@@ -20,5 +20,5 @@ userfaultfd = { version = "0.7.0", features = [] }
 
 
 [features]
-mpk = ["ms_std/mpk"]
+mpk = ["as_std/mpk"]
 default = []

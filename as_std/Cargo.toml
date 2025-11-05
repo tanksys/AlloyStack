@@ -1,0 +1,44 @@
+[package]
+name = "as_std"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+crate-type = ["rlib"]
+
+
+[dependencies]
+as_hostcall = { workspace = true, features = [
+    "socket",
+    "fdtab",
+    "fatfs",
+    "mm",
+] }
+as_std_proc_macro = { path = "../as_std_proc_macro" }
+
+# buddy_system_allocator = "0.9"
+unwinding = { version = "=0.2.0", features = [
+    "panic-handler",
+    "personality",
+], optional = true }
+cfg-if = "1.0.0"
+linked_list_allocator = "0.10.5"
+spin = "0.9.8"
+thiserror-no-std = "2.0.2"
+heapless = "0.8"
+serde = { version = "1.0.217", default-features = false, features = [
+    # "derive",
+    # "serde_derive",
+] }
+serde_json = { version = "1.0.135", default-features = false, features = [
+    "alloc",
+] }
+
+[features]
+panic_def = []
+alloc_def = []
+mpk = ["as_hostcall/enable_mpk"]
+file-based = []
+
+default = []

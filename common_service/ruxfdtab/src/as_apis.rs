@@ -3,23 +3,59 @@ extern crate alloc;
 use std::path::PathBuf;
 
 use alloc::vec;
-use ms_std::libos::libos;
+use as_std::libos::libos;
 use spin::Mutex;
 
 use crate::{
     fd_ops::{close_file_like, get_file_like},
     fs,
 };
-use ms_hostcall::{
+use as_hostcall::{
     fdtab::{FdtabError, FdtabResult},
-    types::{Fd, OpenFlags, OpenMode, Size, Stat, TimeSpec, DirEntry},
+    types::{DirEntry, Fd, OpenFlags, OpenMode, Size, Stat, TimeSpec},
 };
+
+#[cfg(feature = "use-ramdisk")]
 use ruxdriver::init_drivers;
+#[cfg(feature = "use-ramdisk")]
+use ruxfs::init_blkfs;
+
 use ruxfdtable::{FileLike, RuxStat};
-use ruxfs::{fops::OpenOptions, init_blkfs, init_filesystems, prepare_commonfs};
+
+#[allow(unused_imports)]
+use ruxfs::{fops::OpenOptions, init_filesystems, init_tempfs, prepare_commonfs};
+
+fn convert(ruxstat: RuxStat) -> Stat {
+    return Stat {
+        st_dev: ruxstat.st_dev,
+        st_ino: ruxstat.st_ino,
+        st_nlink: ruxstat.st_nlink,
+        st_mode: ruxstat.st_mode,
+        st_uid: ruxstat.st_uid,
+        st_gid: ruxstat.st_gid,
+        __pad0: ruxstat.__pad0,
+        st_rdev: ruxstat.st_rdev,
+        st_size: ruxstat.st_size as usize,
+        st_blksize: ruxstat.st_blksize,
+        st_blocks: ruxstat.st_blocks,
+        st_atime: TimeSpec {
+            tv_sec: ruxstat.st_atime.tv_sec,
+            tv_nsec: ruxstat.st_atime.tv_nsec,
+        },
+        st_mtime: TimeSpec {
+            tv_sec: ruxstat.st_mtime.tv_sec,
+            tv_nsec: ruxstat.st_mtime.tv_nsec,
+        },
+        st_ctime: TimeSpec {
+            tv_sec: ruxstat.st_ctime.tv_sec,
+            tv_nsec: ruxstat.st_ctime.tv_nsec,
+        },
+        __unused: ruxstat.__unused,
+    };
+}
 
 fn get_fs_image_path() -> PathBuf {
-    let image_path = match libos!(fs_image(ms_std::init_context::isolation_ctx().isol_id)) {
+    let image_path = match libos!(fs_image(as_std::init_context::isolation_ctx().isol_id)) {
         Some(s) => s,
         None => "fs_images/fatfs.img".to_owned(),
     };
@@ -33,28 +69,40 @@ fn get_fs_image_path() -> PathBuf {
         .join(image_path)
 }
 
-fn init() {
+fn init() -> bool {
+    #[cfg(feature = "use-ramdisk")]
     let all_devices = init_drivers(get_fs_image_path().to_str().unwrap());
     #[cfg(feature = "log")]
     println!("block devices nums: {}", all_devices.block.len());
+
+    #[cfg(feature = "use-ramdisk")]
     let mount_point = init_blkfs(all_devices.block);
+    #[cfg(not(feature = "use-ramdisk"))]
+    let mount_point = init_tempfs();
     let mut mount_points = vec![mount_point];
     prepare_commonfs(&mut mount_points);
     init_filesystems(mount_points);
     #[cfg(feature = "log")]
     println!("ruxfs init ok");
+
+    true
 }
 
 lazy_static::lazy_static! {
-    static ref MUST_EXIC: Mutex<bool> = {
-        init();
-        Mutex::new(true)
+    static ref MUST_EXIC: bool = {
+        init()
     };
 }
 
+#[cfg(feature = "lock")]
+static GLOBAL_LOCK: Mutex<()> = Mutex::new(());
+
 #[no_mangle]
 pub fn open(path: &str, flags: OpenFlags, mode: OpenMode) -> FdtabResult<Fd> {
-    let _exec = MUST_EXIC.lock();
+    let _exec = *MUST_EXIC;
+    #[cfg(feature = "lock")]
+    let _lock = GLOBAL_LOCK.lock();
+
     #[cfg(feature = "log")]
     {
         println!("ruxfdtab: open path={:?}", path);
@@ -86,13 +134,18 @@ pub fn open(path: &str, flags: OpenFlags, mode: OpenMode) -> FdtabResult<Fd> {
 
 #[no_mangle]
 pub fn write(fd: Fd, buf: &[u8]) -> FdtabResult<Size> {
-    let _exec = MUST_EXIC.lock();
+    let _exec = *MUST_EXIC;
+    #[cfg(feature = "lock")]
+    let _lock = GLOBAL_LOCK.lock();
+
     // libos!(stdout(format!("fd: {}, buf: {:?}", fd, buf).as_bytes()));
     let f = get_file_like(fd)?;
 
     let result = f
         .write(buf)
         .map_err(|e| FdtabError::RuxfsError(e.to_string()));
+
+    #[cfg(feature = "use-ramdisk")]
     f.flush().unwrap();
 
     result
@@ -100,7 +153,10 @@ pub fn write(fd: Fd, buf: &[u8]) -> FdtabResult<Size> {
 
 #[no_mangle]
 pub fn read(fd: Fd, buf: &mut [u8]) -> FdtabResult<Size> {
-    let _exec = MUST_EXIC.lock();
+    let _exec = *MUST_EXIC;
+    #[cfg(feature = "lock")]
+    let _lock = GLOBAL_LOCK.lock();
+
     get_file_like(fd)?
         .read(buf)
         .map_err(|e| FdtabError::RuxfsError(e.to_string()))
@@ -108,13 +164,19 @@ pub fn read(fd: Fd, buf: &mut [u8]) -> FdtabResult<Size> {
 
 #[no_mangle]
 pub fn close(fd: Fd) -> FdtabResult<()> {
-    let _exec = MUST_EXIC.lock();
+    let _exec = *MUST_EXIC;
+    #[cfg(feature = "lock")]
+    let _lock = GLOBAL_LOCK.lock();
+
     close_file_like(fd)
 }
 
 #[no_mangle]
 pub fn lseek(fd: Fd, pos: u32) -> FdtabResult<()> {
-    let _exec = MUST_EXIC.lock();
+    let _exec = *MUST_EXIC;
+    #[cfg(feature = "lock")]
+    let _lock = GLOBAL_LOCK.lock();
+
     fs::File::from_fd(fd)?
         .inner
         .lock()
@@ -124,50 +186,27 @@ pub fn lseek(fd: Fd, pos: u32) -> FdtabResult<()> {
     Ok(())
 }
 
-fn convert(ruxstat: RuxStat) -> Stat {
-    return Stat {
-        st_dev: ruxstat.st_dev,
-        st_ino: ruxstat.st_ino,
-        st_nlink: ruxstat.st_nlink,
-        st_mode: ruxstat.st_mode,
-        st_uid: ruxstat.st_uid,
-        st_gid: ruxstat.st_gid,
-        __pad0: ruxstat.__pad0,
-        st_rdev: ruxstat.st_rdev,
-        st_size: ruxstat.st_size as usize,
-        st_blksize: ruxstat.st_blksize,
-        st_blocks: ruxstat.st_blocks,
-        st_atime: TimeSpec {
-            tv_sec: ruxstat.st_atime.tv_sec,
-            tv_nsec: ruxstat.st_atime.tv_nsec,
-        },
-        st_mtime: TimeSpec {
-            tv_sec: ruxstat.st_mtime.tv_sec,
-            tv_nsec: ruxstat.st_mtime.tv_nsec,
-        },
-        st_ctime: TimeSpec {
-            tv_sec: ruxstat.st_ctime.tv_sec,
-            tv_nsec: ruxstat.st_ctime.tv_nsec,
-        },
-        __unused: ruxstat.__unused,
-    }
-}
-
 #[no_mangle]
 pub fn stat(fd: Fd) -> FdtabResult<Stat> {
-    let _exec = MUST_EXIC.lock();
+    let _exec = *MUST_EXIC;
+    #[cfg(feature = "lock")]
+    let _lock = GLOBAL_LOCK.lock();
+
     let stat = fs::File::from_fd(fd)?
         .stat()
         .map_err(|e| FdtabError::RuxfsError(e.to_string()))?;
     let res = convert(stat);
     // #[cfg(feature = "log")]
     // println!("[DEBUG] stat fd: {:?}, stat: {:?}", fd, res);
-    
+
     Ok(res)
 }
 
 #[no_mangle]
 pub fn readdir(path: &str) -> FdtabResult<Vec<DirEntry>> {
+    let _exec = *MUST_EXIC;
+    #[cfg(feature = "lock")]
+    let _lock = GLOBAL_LOCK.lock();
     #[cfg(feature = "log")]
     println!("[DEBUG] ruxfs read_dir: {:?}", path);
 
@@ -179,11 +218,10 @@ pub fn readdir(path: &str) -> FdtabResult<Vec<DirEntry>> {
         let entry = DirEntry {
             dir_path: item.path(),
             entry_name: item.file_name(),
-            entry_type: item.file_type() as u32
+            entry_type: item.file_type() as u32,
         };
         entries.push(entry);
     }
 
     Ok(entries)
 }
-

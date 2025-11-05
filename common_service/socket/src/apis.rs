@@ -13,12 +13,12 @@ use smoltcp::{
     wire::{DnsQueryType, Ipv4Address},
 };
 
-use ms_hostcall::{
+use as_hostcall::{
     socket::{SmoltcpError, SmoltcpResult},
     types::{Size, SockFd},
 };
 #[cfg(feature = "log")]
-use ms_std::println;
+use as_std::println;
 
 use crate::{acquire_iface, acquire_sockets, from_sockfd, iface_poll, to_sockfd, try_phy_wait};
 
@@ -37,7 +37,10 @@ pub fn addrinfo(name: &str) -> SmoltcpResult<Ipv4Addr> {
         let dns_socket = sockets.get_mut::<dns::Socket>(dns_handle);
         let query = dns_socket
             .start_query(iface.context(), name, DnsQueryType::A)
-            .map_err(|e| SmoltcpError::SmoltcpErr(e.to_string()))?;
+            .map_err(|e| {
+                println!("query err: {}", e);
+                SmoltcpError::DNSQueryFailed
+            })?;
 
         (dns_handle, query)
     };
@@ -132,7 +135,7 @@ pub fn smol_send(handle: SockFd, data: &[u8]) -> SmoltcpResult<()> {
 
 #[no_mangle]
 pub fn smol_recv(handle: SockFd, buf: &mut [u8]) -> SmoltcpResult<Size> {
-    // println!("smol_recv");
+    println!("smol_recv");
     let mut iface = acquire_iface()?;
     let mut sockets = acquire_sockets()?;
 

@@ -9,7 +9,7 @@ edition = "2021"
 crate-type = ["dylib"]
 
 [dependencies]
-ms_hostcall = { path = "../../ms_hostcall" }
+as_hostcall = { path = "../../as_hostcall" }
 
 
 [features]

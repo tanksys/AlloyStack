@@ -9,8 +9,8 @@ use std::{
 
 use fscommon::BufStream;
 
-use ms_hostcall::{fatfs::FatfsError, types::Fd};
-use ms_std::libos::libos;
+use as_hostcall::{fatfs::FatfsError, types::Fd};
+use as_std::libos::libos;
 
 type FileSystem = fatfs::FileSystem<fscommon::BufStream<std::fs::File>>;
 type File<'a> = fatfs::File<'a, fscommon::BufStream<std::fs::File>>;
@@ -20,7 +20,7 @@ pub mod apis;
 pub mod drop_fs;
 
 fn get_fs_image_path() -> PathBuf {
-    let image_path = match libos!(fs_image(ms_std::init_context::isolation_ctx().isol_id)) {
+    let image_path = match libos!(fs_image(as_std::init_context::isolation_ctx().isol_id)) {
         Some(s) => s,
         None => "fs_images/fatfs.img".to_owned(),
     };

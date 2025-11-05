@@ -2,50 +2,53 @@
 
 extern crate alloc;
 
-use alloc::{borrow::ToOwned, string::String};
-use ms_std::{
+use alloc::{borrow::ToOwned, vec::Vec};
+
+#[allow(unused_imports)]
+use as_std::{
     agent::{DataBuffer, FaaSFuncResult as Result},
-    // println,
-    time::SystemTime,
+    println,
+    time::{SystemTime, UNIX_EPOCH},
 };
-use ms_std_proc_macro::FaasData;
+use as_std_proc_macro::FaasData;
 
-const DATA_SIZE: usize = (1024*1024*256-48);
+// const DATA_SIZE: usize = 1024 * 1024 * 256 / 8;
+const DATA_SIZE: usize = include!("../../data_size.config") / 8;
 
-#[allow(dead_code)]
-#[derive(FaasData)]
-pub struct MyComplexData {
-    pub current_time: SystemTime,
-    pub year: i64,
-    pub name: String,
-    pub big_data: [u8; DATA_SIZE],
+#[derive(FaasData, serde::Serialize, serde::Deserialize)]
+struct VecArg {
+    data: Vec<u64>,
 }
 
-impl Default for MyComplexData {
+impl Default for VecArg {
     fn default() -> Self {
-        Self {
-            current_time: SystemTime::now(),
-            year: 0,
-            name: "".to_owned(),
-            big_data: [0; DATA_SIZE],
-        }
+        let data = Vec::with_capacity(DATA_SIZE);
+        Self { data }
     }
 }
 
 #[allow(clippy::result_unit_err)]
 #[no_mangle]
-pub fn main() -> Result<MyComplexData> {
-    let mut d = DataBuffer::<MyComplexData>::with_slot("Conference".to_owned());
-    d.year = 2025;
-    d.name = "Euro".to_owned();
-    
-    for (idx, val) in &mut d.big_data.iter_mut().enumerate() {
-        *val = (idx % 109usize) as u8
-    }
-    d.current_time = SystemTime::now();
-    // println!("construct d ok.");
-    // println!("some_str={}, some_int={}", d.some_str, d.some_int);
+pub fn main() -> Result<()> {
+    let mut d = DataBuffer::<VecArg>::with_slot("Conference".to_owned());
+    d.data.resize(DATA_SIZE, 0);
 
-    
-    Ok(d)
+    for (idx, val) in &mut d.data.iter_mut().enumerate() {
+        *val = (idx % (u64::MAX - 1) as usize) as u64
+    }
+
+    println!("write {} bytes", d.data.len() * 8);
+    // let register_start = SystemTime::now().duration_since(UNIX_EPOCH).as_nanos();
+    // let result = DataBuffer::<VecArg>::from_buffer_slot("Conference".to_owned());
+
+    // if let Some(buffer) = result {
+    //     for i in 0..buffer.data.len() {
+    //         let _ = unsafe { core::ptr::read_volatile((&buffer.data[i]) as *const u64) };
+    //     }
+    // }
+    // let access_end2 = SystemTime::now().duration_since(UNIX_EPOCH).as_nanos();
+
+    // println!("phase34_dur={}", access_end2 - register_start);
+
+    Ok(().into())
 }

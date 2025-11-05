@@ -15,6 +15,10 @@
     [
       "fatfs",
       "libfatfs.so"
+    ],
+    [
+      "time",
+      "libtime.so"
     ]
   ],
   "apps": [
@@ -39,7 +43,6 @@
       "libchecker.so"
     ]
   ],
-  "fs_image": "fs_images/fatfs_large_sort.img",
   "groups": [
     {
       "list": [
@@ -114,14 +117,6 @@
       ],
       "args": {
         "sorter_num": "5"
-      }
-    },
-    {
-      "list": [
-        "checker"
-      ],
-      "args": {
-        "merger_num": "5"
       }
     }
   ]

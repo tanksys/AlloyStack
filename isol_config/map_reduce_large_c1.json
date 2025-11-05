@@ -13,15 +13,15 @@
       "libmm.so"
     ],
     [
+      "time",
+      "libtime.so"
+    ],
+    [
       "fatfs",
       "libfatfs.so"
     ]
   ],
   "apps": [
-    [
-      "file_reader",
-      "libfile_reader.so"
-    ],
     [
       "mapper",
       "libmapper.so"
@@ -31,20 +31,8 @@
       "libreducer.so"
     ]
   ],
-  "fs_image": "fs_images/fatfs_large.img",
+  "fs_image": "fs_images/fatfs.img",
   "groups": [
-    {
-      "list": [
-        {
-          "name": "file_reader",
-          "args": {
-            "slot_name": "part-0",
-            "input_file": "fake_data_0.txt"
-          }
-        }
-      ],
-      "args": {}
-    },
     {
       "list": [
         "mapper"

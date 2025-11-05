@@ -1,0 +1,30 @@
+{
+    "services": [
+      [
+        "fdtab",
+        "libruxfdtab.so"
+      ],
+      [
+        "stdio",
+        "libstdio.so"
+      ],
+      [
+        "mm",
+        "libmm.so"
+      ],
+      [
+        "time",
+        "libtime.so"
+      ],
+      [
+        "fatfs",
+        "libfatfs.so"
+      ]
+    ],
+    "apps": [
+      [
+        "trans_data",
+        "libwasmtime_trans_data.so"
+      ]
+    ]
+  }

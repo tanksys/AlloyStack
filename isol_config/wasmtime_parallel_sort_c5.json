@@ -1,0 +1,89 @@
+{
+    "services": [
+      [
+        "fdtab",
+        "libruxfdtab.so"
+      ],
+      [
+        "stdio",
+        "libstdio.so"
+      ],
+      [
+        "mm",
+        "libmm.so"
+      ],
+      [
+        "fatfs",
+        "libfatfs.so"
+      ]
+    ],
+    "apps": [
+      [
+        "sorter",
+        "libwasmtime_sorter.so"
+      ],
+      [
+        "spliter",
+        "libwasmtime_spliter.so"
+      ],
+      [
+        "merger",
+        "libwasmtime_merger.so"
+      ],
+      [
+        "checker",
+        "libwasmtime_checker.so"
+      ]
+    ],
+    "fs_image": "fs_images/fatfs.img",
+    "groups": [
+      {
+        "list": [
+          "sorter",
+          "sorter",
+          "sorter",
+          "sorter",
+          "sorter"
+        ],
+        "args": {
+          "sorter_num": "5",
+          "merger_num": "5"
+        }
+      },
+      {
+        "list": [
+          "spliter",
+          "spliter",
+          "spliter",
+          "spliter",
+          "spliter"
+        ],
+        "args": {
+          "sorter_num": "5",
+          "merger_num": "5"
+        }
+      },
+      {
+        "list": [
+          "merger",
+          "merger",
+          "merger",
+          "merger",
+          "merger"
+        ],
+        "args": {
+          "sorter_num": "5",
+          "merger_num": "5"
+        }
+      },
+      {
+        "list": [
+          "checker"
+        ],
+        "args": {
+          "sorter_num": "5",
+          "merger_num": "5"
+        }
+      }
+    ]
+  }

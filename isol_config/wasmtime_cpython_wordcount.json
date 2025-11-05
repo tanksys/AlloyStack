@@ -1,0 +1,59 @@
+{
+  "services": [
+    [
+      "fdtab",
+      "libruxfdtab.so"
+    ],
+    [
+      "time",
+      "libtime.so"
+    ],
+    [
+      "mm",
+      "libmm.so"
+    ],
+    [
+      "stdio",
+      "libstdio.so"
+    ],
+    [
+      "fatfs",
+      "libfatfs.so"
+    ]
+  ],
+  "apps": [
+    [
+      "mapper",
+      "libwasmtime_cpython_mapper.so"
+    ],
+    [
+      "reducer",
+      "libwasmtime_cpython_reducer.so"
+    ]
+  ],
+  "fs_image": "fs_images/fatfs.img",
+  "groups": [
+    {
+      "list": [
+        "mapper",
+        "mapper",
+        "mapper"
+      ],
+      "args": {
+        "pyfile_path": "/wasm_bench/wasmtime_mapper.py",
+        "reducer_num": "3"
+      }
+    },
+    {
+      "list": [
+        "reducer",
+        "reducer",
+        "reducer"
+      ],
+      "args": {
+        "pyfile_path": "/wasm_bench/wasmtime_reducer.py",
+        "mapper_num": "3"
+      }
+    }
+  ]
+}

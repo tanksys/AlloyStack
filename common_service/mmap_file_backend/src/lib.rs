@@ -10,11 +10,11 @@ use std::{
 use nix::fcntl::{fcntl, FcntlArg, OFlag};
 use userfaultfd::{Event, Uffd};
 
-use ms_hostcall::{
+use as_hostcall::{
     mmap_file_backend::{MmapFileErr, MmapFileResult},
     types::Fd,
 };
-use ms_std::libos::libos;
+use as_std::libos::libos;
 
 pub mod apis;
 

@@ -15,6 +15,10 @@
         [
             "fatfs",
             "libfatfs.so"
+        ],
+        [
+            "time",
+            "libtime.so"
         ]
     ],
     "apps": [

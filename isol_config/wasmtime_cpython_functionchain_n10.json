@@ -1,0 +1,42 @@
+{
+  "services": [
+    [
+      "fdtab",
+      "libruxfdtab.so"
+    ],
+    [
+      "time",
+      "libtime.so"
+    ],
+    [
+      "mm",
+      "libmm.so"
+    ],
+    [
+      "stdio",
+      "libstdio.so"
+    ],
+    [
+      "fatfs",
+      "libfatfs.so"
+    ]
+  ],
+  "apps": [
+    [
+      "func",
+      "libwasmtime_cpython_func.so"
+    ]
+  ],
+  "fs_image": "fs_images/fatfs.img",
+  "groups": [
+    {
+      "list": [
+        "func"
+      ],
+      "args": {
+        "pyfile_path": "/wasm_bench/functionchain.py",
+        "func_num": "10"
+      }
+    }
+  ]
+}

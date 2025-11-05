@@ -1,0 +1,28 @@
+[package]
+name = "asvisor"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+libasvisor = { workspace = true, default-features = false, features = [] }
+
+log = "0.4.20"
+env_logger = "0.10.0"
+clap = { version = "4.3.21", features = ["derive"] }
+derive_more = "0.99.17"
+thiserror-no-std = "2.0.2"
+anyhow = { version = "1.0.82" }
+tokio = { version = "1.32.0", features = [
+    "macros",
+    "rt-multi-thread",
+], optional = true }
+
+[features]
+namespace = ["libasvisor/namespace"]
+multi_workflow = ["tokio", "namespace"]
+mpk = ["libasvisor/enable_mpk"]
+pkey_per_func = ["mpk", "libasvisor/pkey_per_func"]
+
+default = ["namespace"]

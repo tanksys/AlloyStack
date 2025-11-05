@@ -1,7 +1,7 @@
 use alloc::sync::Arc;
 use axerrno::LinuxResult;
 use axio::PollState;
-use ms_hostcall::{
+use as_hostcall::{
     fdtab::{FdtabError, FdtabResult},
     types::Fd,
 };

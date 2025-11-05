@@ -1,0 +1,23 @@
+[package]
+name = "wasmtime_cpython"
+version = "0.1.0"
+edition = "2021"
+build = "build.rs"
+# build = "../../build_user.rs"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+# crate-type = ["dylib"]
+crate-type = ["staticlib"]
+
+[dependencies]
+as_std = { path = "../../as_std", features = ["panic_def", "alloc_def"] }
+as_hostcall = { path = "../../as_hostcall" }
+wasmtime_wasi_api = { path = "../../wasmtime_wasi_api" }
+
+lazy_static = { version = "1.5.0", features = ["spin_no_std"] }
+spin = "0.9.8"
+sjlj = "0.1.3"
+
+[features]
+mpk = ["as_std/mpk"]

@@ -1,7 +1,7 @@
 use alloc::sync::Arc;
 use axerrno::{LinuxError, LinuxResult};
 use axio::PollState;
-use ms_std::libos::libos;
+use as_std::libos::libos;
 
 pub struct Stdin {}
 pub struct Stdout {}

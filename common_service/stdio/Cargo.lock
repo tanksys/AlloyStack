@@ -3,6 +3,15 @@
 version = 3
 
 [[package]]
+name = "as_hostcall"
+version = "0.1.0"
+dependencies = [
+ "bitflags",
+ "derive_more",
+ "thiserror-no-std",
+]
+
+[[package]]
 name = "bitflags"
 version = "2.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -25,15 +34,6 @@ dependencies = [
  "quote",
  "rustc_version",
  "syn",
-]
-
-[[package]]
-name = "ms_hostcall"
-version = "0.1.0"
-dependencies = [
- "bitflags",
- "derive_more",
- "thiserror-no-std",
 ]
 
 [[package]]
@@ -73,7 +73,7 @@ checksum = "836fa6a3e1e547f9a2c4040802ec865b5d85f4014efe00555d7090a3dcaa1090"
 name = "stdio"
 version = "0.1.0"
 dependencies = [
- "ms_hostcall",
+ "as_hostcall",
 ]
 
 [[package]]

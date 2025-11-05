@@ -1,10 +1,10 @@
 #![cfg_attr(feature = "with_libos", no_std)]
 
-use ms_std::args;
+use as_std::args;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "with_libos")] {
-        use ms_std::{agent::FaaSFuncResult as Result, println};
+        use as_std::{agent::FaaSFuncResult as Result, println};
         extern crate alloc;
     } else {
         type Result<T> = core::result::Result<T, String>;
@@ -20,8 +20,8 @@ pub fn main() -> Result<()> {
     println!("Hello, world! id: {}", id);
     #[cfg(feature = "measure_mem")]
     {
-        use ms_std::libos::MetricEvent::Mem;
-        ms_std::libos::metric(Mem);
+        use as_std::libos::MetricEvent::Mem;
+        as_std::libos::metric(Mem);
     }
 
     Ok(().into())

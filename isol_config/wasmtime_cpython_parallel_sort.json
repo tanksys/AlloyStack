@@ -1,0 +1,79 @@
+{
+  "services": [
+    [
+      "fdtab",
+      "libruxfdtab.so"
+    ],
+    [
+      "time",
+      "libtime.so"
+    ],
+    [
+      "mm",
+      "libmm.so"
+    ],
+    [
+      "stdio",
+      "libstdio.so"
+    ],
+    [
+      "fatfs",
+      "libfatfs.so"
+    ]
+  ],
+  "apps": [
+    [
+      "func",
+      "libwasmtime_cpython_parallel_sort.so"
+    ]
+  ],
+  "fs_image": "fs_images/fatfs.img",
+  "groups": [
+    {
+      "list": [
+        "func",
+        "func"
+      ],
+      "args": {
+        "pyfile_path": "/wasm_bench/wasmtime_sorter.py",
+        "sorter_num": "2",
+        "merger_num": "5"
+      }
+    },
+    {
+      "list": [
+        "func",
+        "func"
+      ],
+      "args": {
+        "pyfile_path": "/wasm_bench/wasmtime_spliter.py",
+        "sorter_num": "2",
+        "merger_num": "5"
+      }
+    },
+    {
+      "list": [
+        "func",
+        "func",
+        "func",
+        "func",
+        "func"
+      ],
+      "args": {
+        "pyfile_path": "/wasm_bench/wasmtime_merger.py",
+        "sorter_num": "2",
+        "merger_num": "5"
+      }
+    },
+    {
+      "list": [
+        "func"
+      ],
+      "args": {
+        "pyfile_path": "/wasm_bench/wasmtime_checker.py",
+        "sorter_num": "2",
+        "merger_num": "5"
+      }
+    }
+  ]
+}

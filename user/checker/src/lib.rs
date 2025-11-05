@@ -3,16 +3,28 @@
 
 use alloc::{format, vec::Vec};
 
-use ms_std::{args, prelude::*};
-use ms_std_proc_macro::FaasData;
+use as_std::{
+    args,
+    prelude::*,
+    time::{SystemTime, UNIX_EPOCH},
+};
+use as_std_proc_macro::FaasData;
 
+#[cfg_attr(feature = "file-based", derive(Serialize, Deserialize))]
 #[derive(Default, FaasData)]
 struct VecArg {
+    #[cfg(feature = "pkey_per_func")]
+    array: heapless::Vec<u32, { 20 * 1024 * 1024 }>,
+    #[cfg(not(feature = "pkey_per_func"))]
     array: Vec<u32>,
 }
 
 #[no_mangle]
 pub fn main() -> Result<()> {
+    println!(
+        "com_start4: {}",
+        SystemTime::now().duration_since(UNIX_EPOCH).as_micros() as f64 / 1000000f64
+    );
     let merger_num: u32 = {
         let m = args::get("merger_num").unwrap();
         m.parse().unwrap()
@@ -37,7 +49,10 @@ pub fn main() -> Result<()> {
             last_max = *first
         }
     }
-
+    println!(
+        "com_end4: {}",
+        SystemTime::now().duration_since(UNIX_EPOCH).as_micros() as f64 / 1000000f64
+    );
     println!("sort result is ok, total sort {} numbers", counter);
     Ok(().into())
 }

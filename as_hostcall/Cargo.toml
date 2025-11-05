@@ -1,0 +1,28 @@
+[package]
+name = "as_hostcall"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+
+
+[dependencies]
+# smoltcp.workspace = true
+derive_more = "0.99.17"
+bitflags = "2.5.0"
+thiserror-no-std = "2.0.2"
+# managed = { version = "0.8", default-features = false, features = ["map"] }
+# defmt = { version = "0.3", optional = true }
+# libc = { version = "0.2.18", optional = true }
+
+[features]
+fatfs = []
+socket = []
+signal = []
+
+fdtab = ["fatfs", "socket"]
+mmap_file_backend = ["fdtab"]
+mm = ["mmap_file_backend"]
+
+enable_mpk = []

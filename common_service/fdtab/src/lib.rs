@@ -7,8 +7,8 @@ use alloc::vec::Vec;
 
 use spin::Mutex;
 
-use ms_hostcall::types::{Fd, OpenMode, SockFd};
-use ms_std::{self, println};
+use as_hostcall::types::{Fd, OpenMode, SockFd};
+use as_std::{self, println};
 
 pub mod apis;
 

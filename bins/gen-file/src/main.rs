@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use libmsvisor::isolation::config::{
+use libasvisor::isolation::config::{
     App, IsolationConfig, IsolationGroup, IsolationGroupApp, LoadableUnit,
 };
 

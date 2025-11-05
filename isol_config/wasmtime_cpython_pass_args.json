@@ -1,0 +1,49 @@
+{
+  "services": [
+    [
+      "fdtab",
+      "libruxfdtab.so"
+    ],
+    [
+      "time",
+      "libtime.so"
+    ],
+    [
+      "mm",
+      "libmm.so"
+    ],
+    [
+      "stdio",
+      "libstdio.so"
+    ],
+    [
+      "fatfs",
+      "libfatfs.so"
+    ]
+  ],
+  "apps": [
+    [
+      "cpython",
+      "libwasmtime_cpython.so"
+    ]
+  ],
+  "fs_image": "fs_images/fatfs.img",
+  "groups": [
+    {
+      "list": [
+        "cpython"
+      ],
+      "args": {
+        "pyfile_path": "/wasm_bench/pass_str.py"
+      }
+    },
+    {
+      "list": [
+        "cpython"
+      ],
+      "args": {
+        "pyfile_path": "/wasm_bench/recv_str.py"
+      }
+    }
+  ]
+}

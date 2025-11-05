@@ -1,0 +1,45 @@
+{
+  "services": [
+    [
+      "fdtab",
+      "libruxfdtab.so"
+    ],
+    [
+      "time",
+      "libtime.so"
+    ],
+    [
+      "mm",
+      "libmm.so"
+    ],
+    [
+      "stdio",
+      "libstdio.so"
+    ],
+    [
+      "fatfs",
+      "libfatfs.so"
+    ]
+  ],
+  "apps": [
+    [
+      "wordcount",
+      "libwasmtime_cpython_wordcount.so"
+    ]
+  ],
+  "fs_image": "fs_images/fatfs.img",
+  "groups": [
+    {
+      "list": [
+        "wordcount",
+        "wordcount",
+        "wordcount"
+      ],
+      "args": {
+        "pyfile_path": "/wasm_bench/wordcount.py",
+        "reducer_num": "3",
+        "mapper_num": "3"
+      }
+    }
+  ]
+}

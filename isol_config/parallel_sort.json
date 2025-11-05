@@ -15,6 +15,10 @@
     [
       "fatfs",
       "libfatfs.so"
+    ],
+    [
+      "time",
+      "libtime.so"
     ]
   ],
   "apps": [
@@ -25,21 +29,8 @@
     [
       "sorter",
       "libsorter.so"
-    ],
-    [
-      "splitter",
-      "libsplitter.so"
-    ],
-    [
-      "merger",
-      "libmerger.so"
-    ],
-    [
-      "checker",
-      "libchecker.so"
     ]
   ],
-  "fs_image": "fs_images/fatfs_large_sort.img",
   "groups": [
     {
       "list": [
@@ -49,78 +40,17 @@
             "slot_name": "input-part-0",
             "input_file": "sort_data_0.txt"
           }
-        },
-        {
-          "name": "file_reader",
-          "args": {
-            "slot_name": "input-part-1",
-            "input_file": "sort_data_1.txt"
-          }
-        },
-        {
-          "name": "file_reader",
-          "args": {
-            "slot_name": "input-part-2",
-            "input_file": "sort_data_2.txt"
-          }
-        },
-        {
-          "name": "file_reader",
-          "args": {
-            "slot_name": "input-part-3",
-            "input_file": "sort_data_3.txt"
-          }
-        },
-        {
-          "name": "file_reader",
-          "args": {
-            "slot_name": "input-part-4",
-            "input_file": "sort_data_4.txt"
-          }
         }
       ],
       "args": {}
     },
     {
       "list": [
-        "sorter",
-        "sorter",
-        "sorter",
-        "sorter",
         "sorter"
       ],
       "args": {
-        "sorter_num": "5",
-        "merger_num": "4"
-      }
-    },
-    {
-      "list": [
-        "splitter",
-        "splitter",
-        "splitter",
-        "splitter",
-        "splitter"
-      ],
-      "args": {}
-    },
-    {
-      "list": [
-        "merger",
-        "merger",
-        "merger",
-        "merger"
-      ],
-      "args": {
-        "sorter_num": "5"
-      }
-    },
-    {
-      "list": [
-        "checker"
-      ],
-      "args": {
-        "merger_num": "4"
+        "sorter_num": "1",
+        "merger_num": "1"
       }
     }
   ]

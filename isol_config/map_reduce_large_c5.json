@@ -13,6 +13,10 @@
       "libmm.so"
     ],
     [
+      "time",
+      "libtime.so"
+    ],
+    [
       "fatfs",
       "libfatfs.so"
     ]
@@ -31,48 +35,8 @@
       "libreducer.so"
     ]
   ],
-  "fs_image": "fs_images/fatfs_large.img",
+  "fs_image": "fs_images/fatfs.img",
   "groups": [
-    {
-      "list": [
-        {
-          "name": "file_reader",
-          "args": {
-            "slot_name": "part-0",
-            "input_file": "fake_data_0.txt"
-          }
-        },
-        {
-          "name": "file_reader",
-          "args": {
-            "slot_name": "part-1",
-            "input_file": "fake_data_1.txt"
-          }
-        },
-        {
-          "name": "file_reader",
-          "args": {
-            "slot_name": "part-2",
-            "input_file": "fake_data_2.txt"
-          }
-        },
-        {
-          "name": "file_reader",
-          "args": {
-            "slot_name": "part-3",
-            "input_file": "fake_data_3.txt"
-          }
-        },
-        {
-          "name": "file_reader",
-          "args": {
-            "slot_name": "part-4",
-            "input_file": "fake_data_4.txt"
-          }
-        }
-      ],
-      "args": {}
-    },
     {
       "list": [
         "mapper",

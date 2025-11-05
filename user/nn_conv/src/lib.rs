@@ -10,12 +10,12 @@ use burn::{
     record::{BinBytesRecorder, FullPrecisionSettings, Recorder, RecorderError},
     tensor::{backend::Backend, Int, Tensor},
 };
-use ms_hostcall::fdtab::FdtabError;
-use ms_std::{
+use as_hostcall::fdtab::FdtabError;
+use as_std::{
     agent::{FaaSFuncError, FaaSFuncResult as Result},
     println,
 };
-use ms_std_proc_macro::FaasData;
+use as_std_proc_macro::FaasData;
 use thiserror_no_std::Error;
 
 const NUM_CLASSES: usize = 10;

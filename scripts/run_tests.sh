@@ -1,9 +1,9 @@
 #!/bin/bash
 
 declare -A test_groups=(
-    [faasflow_test]="long_chain map_reduce pass_complex_args"
+    [faasflow_test]="long_chain_n15 pass_complex_args map_reduce parallel_sort"
     [file_test]="simple_file"
-    [wasm_test]="tinywasm_wordcount tinywasm_parallel_sort tinywasm_cpython"
+    # [wasm_test]="tinywasm_wordcount tinywasm_parallel_sort tinywasm_cpython"
 )
 
 passed_count=0

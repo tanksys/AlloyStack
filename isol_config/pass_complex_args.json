@@ -5,6 +5,10 @@
       "libfdtab.so"
     ],
     [
+      "fatfs",
+      "libfatfs.so"
+    ],
+    [
       "stdio",
       "libstdio.so"
     ],

@@ -1,5 +1,5 @@
 use log::{Metadata, Record};
-use ms_std::time::{self, SystemTime};
+use as_std::time::{self, SystemTime};
 
 pub struct MyLogger {}
 

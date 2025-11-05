@@ -14,7 +14,7 @@ dependencies = [
 [[package]]
 name = "arm_gic"
 version = "0.1.0"
-source = "git+https://github.com/anti-entropy123/ruxos/#69217283ca94c10d6b084be7a71a35b63b29f2b5"
+source = "git+https://github.com/anti-entropy123/ruxos/#ca09e9478c5f78bdc408bf28e12c1f437ea1d83e"
 dependencies = [
  "tock-registers",
 ]
@@ -22,9 +22,42 @@ dependencies = [
 [[package]]
 name = "arm_pl011"
 version = "0.1.0"
-source = "git+https://github.com/anti-entropy123/ruxos/#69217283ca94c10d6b084be7a71a35b63b29f2b5"
+source = "git+https://github.com/anti-entropy123/ruxos/#ca09e9478c5f78bdc408bf28e12c1f437ea1d83e"
 dependencies = [
  "tock-registers",
+]
+
+[[package]]
+name = "as_hostcall"
+version = "0.1.0"
+dependencies = [
+ "bitflags 2.6.0",
+ "derive_more",
+ "thiserror-no-std",
+]
+
+[[package]]
+name = "as_std"
+version = "0.1.0"
+dependencies = [
+ "as_hostcall",
+ "as_std_proc_macro",
+ "cfg-if",
+ "heapless",
+ "linked_list_allocator",
+ "serde",
+ "serde_json",
+ "spin",
+ "thiserror-no-std",
+]
+
+[[package]]
+name = "as_std_proc_macro"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
 ]
 
 [[package]]
@@ -36,7 +69,7 @@ checksum = "0c4b4d0bd25bd0b74681c0ad21497610ce1b7c91b1022cd21c80c6fbdd9476b0"
 [[package]]
 name = "axerrno"
 version = "0.1.0"
-source = "git+https://github.com/anti-entropy123/ruxos/#69217283ca94c10d6b084be7a71a35b63b29f2b5"
+source = "git+https://github.com/anti-entropy123/ruxos/#ca09e9478c5f78bdc408bf28e12c1f437ea1d83e"
 dependencies = [
  "log",
 ]
@@ -44,7 +77,7 @@ dependencies = [
 [[package]]
 name = "axfs_devfs"
 version = "0.1.0"
-source = "git+https://github.com/anti-entropy123/ruxos/#69217283ca94c10d6b084be7a71a35b63b29f2b5"
+source = "git+https://github.com/anti-entropy123/ruxos/#ca09e9478c5f78bdc408bf28e12c1f437ea1d83e"
 dependencies = [
  "axfs_vfs",
  "log",
@@ -54,7 +87,7 @@ dependencies = [
 [[package]]
 name = "axfs_ramfs"
 version = "0.1.0"
-source = "git+https://github.com/anti-entropy123/ruxos/#69217283ca94c10d6b084be7a71a35b63b29f2b5"
+source = "git+https://github.com/anti-entropy123/ruxos/#ca09e9478c5f78bdc408bf28e12c1f437ea1d83e"
 dependencies = [
  "axfs_vfs",
  "log",
@@ -64,7 +97,7 @@ dependencies = [
 [[package]]
 name = "axfs_vfs"
 version = "0.1.0"
-source = "git+https://github.com/anti-entropy123/ruxos/#69217283ca94c10d6b084be7a71a35b63b29f2b5"
+source = "git+https://github.com/anti-entropy123/ruxos/#ca09e9478c5f78bdc408bf28e12c1f437ea1d83e"
 dependencies = [
  "axerrno",
  "bitflags 2.6.0",
@@ -74,7 +107,7 @@ dependencies = [
 [[package]]
 name = "axio"
 version = "0.1.0"
-source = "git+https://github.com/anti-entropy123/ruxos/#69217283ca94c10d6b084be7a71a35b63b29f2b5"
+source = "git+https://github.com/anti-entropy123/ruxos/#ca09e9478c5f78bdc408bf28e12c1f437ea1d83e"
 dependencies = [
  "axerrno",
 ]
@@ -82,7 +115,7 @@ dependencies = [
 [[package]]
 name = "axlog"
 version = "0.1.0"
-source = "git+https://github.com/anti-entropy123/ruxos/#69217283ca94c10d6b084be7a71a35b63b29f2b5"
+source = "git+https://github.com/anti-entropy123/ruxos/#ca09e9478c5f78bdc408bf28e12c1f437ea1d83e"
 dependencies = [
  "cfg-if",
  "crate_interface",
@@ -93,7 +126,7 @@ dependencies = [
 [[package]]
 name = "axsync"
 version = "0.1.0"
-source = "git+https://github.com/anti-entropy123/ruxos/#69217283ca94c10d6b084be7a71a35b63b29f2b5"
+source = "git+https://github.com/anti-entropy123/ruxos/#ca09e9478c5f78bdc408bf28e12c1f437ea1d83e"
 dependencies = [
  "ruxtask",
  "spinlock",
@@ -138,7 +171,7 @@ checksum = "1fd0f2584146f6f2ef48085050886acf353beff7305ebd1ae69500e27c67f64b"
 [[package]]
 name = "capability"
 version = "0.1.0"
-source = "git+https://github.com/anti-entropy123/ruxos/#69217283ca94c10d6b084be7a71a35b63b29f2b5"
+source = "git+https://github.com/anti-entropy123/ruxos/#ca09e9478c5f78bdc408bf28e12c1f437ea1d83e"
 dependencies = [
  "axerrno",
  "bitflags 2.6.0",
@@ -164,7 +197,7 @@ checksum = "6af24c4862260a825484470f5526a91ad1031e04ab899be62478241231f62b46"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.77",
+ "syn 2.0.87",
 ]
 
 [[package]]
@@ -183,13 +216,13 @@ dependencies = [
  "proc-macro2",
  "quote",
  "rustc_version 0.4.1",
- "syn 2.0.77",
+ "syn 2.0.87",
 ]
 
 [[package]]
 name = "driver_block"
 version = "0.1.0"
-source = "git+https://github.com/anti-entropy123/ruxos/#69217283ca94c10d6b084be7a71a35b63b29f2b5"
+source = "git+https://github.com/anti-entropy123/ruxos/#ca09e9478c5f78bdc408bf28e12c1f437ea1d83e"
 dependencies = [
  "driver_common",
  "fscommon",
@@ -199,12 +232,12 @@ dependencies = [
 [[package]]
 name = "driver_common"
 version = "0.1.0"
-source = "git+https://github.com/anti-entropy123/ruxos/#69217283ca94c10d6b084be7a71a35b63b29f2b5"
+source = "git+https://github.com/anti-entropy123/ruxos/#ca09e9478c5f78bdc408bf28e12c1f437ea1d83e"
 
 [[package]]
 name = "dtb"
 version = "0.1.0"
-source = "git+https://github.com/anti-entropy123/ruxos/#69217283ca94c10d6b084be7a71a35b63b29f2b5"
+source = "git+https://github.com/anti-entropy123/ruxos/#ca09e9478c5f78bdc408bf28e12c1f437ea1d83e"
 dependencies = [
  "fdt-rs",
  "lazy_init",
@@ -213,7 +246,7 @@ dependencies = [
 [[package]]
 name = "dw_apb_uart"
 version = "0.1.0"
-source = "git+https://github.com/anti-entropy123/ruxos/#69217283ca94c10d6b084be7a71a35b63b29f2b5"
+source = "git+https://github.com/anti-entropy123/ruxos/#ca09e9478c5f78bdc408bf28e12c1f437ea1d83e"
 dependencies = [
  "tock-registers",
 ]
@@ -275,7 +308,7 @@ dependencies = [
 [[package]]
 name = "flatten_objects"
 version = "0.1.0"
-source = "git+https://github.com/anti-entropy123/ruxos/#69217283ca94c10d6b084be7a71a35b63b29f2b5"
+source = "git+https://github.com/anti-entropy123/ruxos/#ca09e9478c5f78bdc408bf28e12c1f437ea1d83e"
 dependencies = [
  "bitmaps",
 ]
@@ -331,6 +364,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "itoa"
+version = "1.0.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d75a2a4b1b190afb6f5425f10f6a8f959d2ea0b9c2b1d79553551850539e4674"
+
+[[package]]
 name = "kernel_guard"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -343,7 +382,7 @@ dependencies = [
 [[package]]
 name = "lazy_init"
 version = "0.1.0"
-source = "git+https://github.com/anti-entropy123/ruxos/#69217283ca94c10d6b084be7a71a35b63b29f2b5"
+source = "git+https://github.com/anti-entropy123/ruxos/#ca09e9478c5f78bdc408bf28e12c1f437ea1d83e"
 
 [[package]]
 name = "lazy_static"
@@ -401,37 +440,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "359639f2591c78370034feaa79ebd114516d04ba642a89bb68b2b806ef2bc2f6"
 
 [[package]]
-name = "ms_hostcall"
-version = "0.1.0"
-dependencies = [
- "bitflags 2.6.0",
- "derive_more",
- "thiserror-no-std",
-]
-
-[[package]]
-name = "ms_std"
-version = "0.1.0"
-dependencies = [
- "cfg-if",
- "heapless",
- "linked_list_allocator",
- "ms_hostcall",
- "ms_std_proc_macro",
- "spin",
- "thiserror-no-std",
-]
-
-[[package]]
-name = "ms_std_proc_macro"
-version = "0.1.0"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.77",
-]
-
-[[package]]
 name = "nb"
 version = "0.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -469,7 +477,7 @@ dependencies = [
 [[package]]
 name = "page_table_entry"
 version = "0.1.0"
-source = "git+https://github.com/anti-entropy123/ruxos/#69217283ca94c10d6b084be7a71a35b63b29f2b5"
+source = "git+https://github.com/anti-entropy123/ruxos/#ca09e9478c5f78bdc408bf28e12c1f437ea1d83e"
 dependencies = [
  "aarch64-cpu",
  "bitflags 2.6.0",
@@ -487,7 +495,7 @@ checksum = "57c0d7b74b563b49d38dae00a0c37d4d6de9b432382b2892f0574ddcae73fd0a"
 [[package]]
 name = "percpu"
 version = "0.1.0"
-source = "git+https://github.com/anti-entropy123/ruxos/#69217283ca94c10d6b084be7a71a35b63b29f2b5"
+source = "git+https://github.com/anti-entropy123/ruxos/#ca09e9478c5f78bdc408bf28e12c1f437ea1d83e"
 dependencies = [
  "cfg-if",
  "percpu_macros",
@@ -498,11 +506,11 @@ dependencies = [
 [[package]]
 name = "percpu_macros"
 version = "0.1.0"
-source = "git+https://github.com/anti-entropy123/ruxos/#69217283ca94c10d6b084be7a71a35b63b29f2b5"
+source = "git+https://github.com/anti-entropy123/ruxos/#ca09e9478c5f78bdc408bf28e12c1f437ea1d83e"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.77",
+ "syn 2.0.87",
 ]
 
 [[package]]
@@ -526,7 +534,7 @@ dependencies = [
 [[package]]
 name = "ratio"
 version = "0.1.0"
-source = "git+https://github.com/anti-entropy123/ruxos/#69217283ca94c10d6b084be7a71a35b63b29f2b5"
+source = "git+https://github.com/anti-entropy123/ruxos/#ca09e9478c5f78bdc408bf28e12c1f437ea1d83e"
 
 [[package]]
 name = "raw-cpuid"
@@ -584,7 +592,7 @@ checksum = "955d28af4278de8121b7ebeb796b6a45735dc01436d898801014aced2773a3d6"
 [[package]]
 name = "ruxconfig"
 version = "0.1.0"
-source = "git+https://github.com/anti-entropy123/ruxos/#69217283ca94c10d6b084be7a71a35b63b29f2b5"
+source = "git+https://github.com/anti-entropy123/ruxos/#ca09e9478c5f78bdc408bf28e12c1f437ea1d83e"
 dependencies = [
  "serde",
  "toml_edit",
@@ -593,7 +601,7 @@ dependencies = [
 [[package]]
 name = "ruxdriver"
 version = "0.1.0"
-source = "git+https://github.com/anti-entropy123/ruxos/#69217283ca94c10d6b084be7a71a35b63b29f2b5"
+source = "git+https://github.com/anti-entropy123/ruxos/#ca09e9478c5f78bdc408bf28e12c1f437ea1d83e"
 dependencies = [
  "cfg-if",
  "driver_block",
@@ -605,11 +613,11 @@ dependencies = [
 name = "ruxfdtab"
 version = "0.1.0"
 dependencies = [
+ "as_hostcall",
+ "as_std",
  "axerrno",
  "axio",
  "lazy_static",
- "ms_hostcall",
- "ms_std",
  "ruxdriver",
  "ruxfdtable",
  "ruxfs",
@@ -619,7 +627,7 @@ dependencies = [
 [[package]]
 name = "ruxfdtable"
 version = "0.1.0"
-source = "git+https://github.com/anti-entropy123/ruxos/#69217283ca94c10d6b084be7a71a35b63b29f2b5"
+source = "git+https://github.com/anti-entropy123/ruxos/#ca09e9478c5f78bdc408bf28e12c1f437ea1d83e"
 dependencies = [
  "axerrno",
  "axio",
@@ -632,7 +640,7 @@ dependencies = [
 [[package]]
 name = "ruxfs"
 version = "0.1.0"
-source = "git+https://github.com/anti-entropy123/ruxos/#69217283ca94c10d6b084be7a71a35b63b29f2b5"
+source = "git+https://github.com/anti-entropy123/ruxos/#ca09e9478c5f78bdc408bf28e12c1f437ea1d83e"
 dependencies = [
  "axerrno",
  "axfs_devfs",
@@ -653,7 +661,7 @@ dependencies = [
 [[package]]
 name = "ruxhal"
 version = "0.1.0"
-source = "git+https://github.com/anti-entropy123/ruxos/#69217283ca94c10d6b084be7a71a35b63b29f2b5"
+source = "git+https://github.com/anti-entropy123/ruxos/#ca09e9478c5f78bdc408bf28e12c1f437ea1d83e"
 dependencies = [
  "aarch64-cpu",
  "arm_gic",
@@ -688,7 +696,7 @@ dependencies = [
 [[package]]
 name = "ruxtask"
 version = "0.1.0"
-source = "git+https://github.com/anti-entropy123/ruxos/#69217283ca94c10d6b084be7a71a35b63b29f2b5"
+source = "git+https://github.com/anti-entropy123/ruxos/#ca09e9478c5f78bdc408bf28e12c1f437ea1d83e"
 dependencies = [
  "axerrno",
  "cfg-if",
@@ -696,6 +704,12 @@ dependencies = [
  "ruxfdtable",
  "ruxhal",
 ]
+
+[[package]]
+name = "ryu"
+version = "1.0.18"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f3cb5ba0dc43242ce17de99c180e96db90b235b8a9fdc9543c96d2209116bd9f"
 
 [[package]]
 name = "sbi-rt"
@@ -741,22 +755,34 @@ checksum = "388a1df253eca08550bef6c72392cfe7c30914bf41df5269b68cbd6ff8f570a3"
 
 [[package]]
 name = "serde"
-version = "1.0.210"
+version = "1.0.217"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c8e3592472072e6e22e0a54d5904d9febf8508f65fb8552499a1abc7d1078c3a"
+checksum = "02fc4265df13d6fa1d00ecff087228cc0a2b5f3c0e87e258d8b94a156e984c70"
 dependencies = [
  "serde_derive",
 ]
 
 [[package]]
 name = "serde_derive"
-version = "1.0.210"
+version = "1.0.217"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "243902eda00fad750862fc144cea25caca5e20d615af0a81bee94ca738f1df1f"
+checksum = "5a9bf7cf98d04a2b28aead066b7496853d4779c9cc183c440dbac457641e19a0"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.77",
+ "syn 2.0.87",
+]
+
+[[package]]
+name = "serde_json"
+version = "1.0.135"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2b0d7ba2887406110130a978386c4e1befb98c674b4fba677954e4db976630d9"
+dependencies = [
+ "itoa",
+ "memchr",
+ "ryu",
+ "serde",
 ]
 
 [[package]]
@@ -771,7 +797,7 @@ dependencies = [
 [[package]]
 name = "spinlock"
 version = "0.1.0"
-source = "git+https://github.com/anti-entropy123/ruxos/#69217283ca94c10d6b084be7a71a35b63b29f2b5"
+source = "git+https://github.com/anti-entropy123/ruxos/#ca09e9478c5f78bdc408bf28e12c1f437ea1d83e"
 dependencies = [
  "cfg-if",
  "kernel_guard",
@@ -811,9 +837,9 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "2.0.77"
+version = "2.0.87"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9f35bcdf61fd8e7be6caf75f429fdca8beb3ed76584befb503b1569faee373ed"
+checksum = "25aa4ce346d03a6dcd68dd8b4010bcb74e54e62c90c573f394c46eae99aba32d"
 dependencies = [
  "proc-macro2",
  "quote",

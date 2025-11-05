@@ -1,0 +1,132 @@
+{
+  "services": [
+    [
+      "fdtab",
+      "libruxfdtab.so"
+    ],
+    [
+      "time",
+      "libtime.so"
+    ],
+    [
+      "mm",
+      "libmm.so"
+    ],
+    [
+      "stdio",
+      "libstdio.so"
+    ],
+    [
+      "fatfs",
+      "libfatfs.so"
+    ]
+  ],
+  "apps": [
+    [
+      "func",
+      "libwasmtime_cpython_func.so"
+    ]
+  ],
+  "fs_image": "fs_images/fatfs.img",
+  "groups": [
+    {
+      "list": [
+        "func"
+      ],
+      "args": {
+        "pyfile_path": "/wasm_bench/wasmtime_func.py",
+        "func_num": "0"
+      }
+    },
+    {
+      "list": [
+        "func"
+      ],
+      "args": {
+        "pyfile_path": "/wasm_bench/wasmtime_func.py",
+        "func_num": "1"
+      }
+    },
+    {
+      "list": [
+        "func"
+      ],
+      "args": {
+        "pyfile_path": "/wasm_bench/wasmtime_func.py",
+        "func_num": "2"
+      }
+    },
+    {
+      "list": [
+        "func"
+      ],
+      "args": {
+        "pyfile_path": "/wasm_bench/wasmtime_func.py",
+        "func_num": "3"
+      }
+    },
+    {
+      "list": [
+        "func"
+      ],
+      "args": {
+        "pyfile_path": "/wasm_bench/wasmtime_func.py",
+        "func_num": "4"
+      }
+    },
+    {
+      "list": [
+        "func"
+      ],
+      "args": {
+        "pyfile_path": "/wasm_bench/wasmtime_func.py",
+        "func_num": "5"
+      }
+    },
+    {
+      "list": [
+        "func"
+      ],
+      "args": {
+        "pyfile_path": "/wasm_bench/wasmtime_func.py",
+        "func_num": "6"
+      }
+    },
+    {
+      "list": [
+        "func"
+      ],
+      "args": {
+        "pyfile_path": "/wasm_bench/wasmtime_func.py",
+        "func_num": "7"
+      }
+    },
+    {
+      "list": [
+        "func"
+      ],
+      "args": {
+        "pyfile_path": "/wasm_bench/wasmtime_func.py",
+        "func_num": "8"
+      }
+    },
+    {
+      "list": [
+        "func"
+      ],
+      "args": {
+        "pyfile_path": "/wasm_bench/wasmtime_func.py",
+        "func_num": "9"
+      }
+    },
+    {
+      "list": [
+        "func"
+      ],
+      "args": {
+        "pyfile_path": "/wasm_bench/wasmtime_func.py",
+        "func_num": "10"
+      }
+    }
+  ]
+}

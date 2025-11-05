@@ -11,7 +11,7 @@
 
 extern crate alloc;
 
-pub use ms_std;
+pub use as_std;
 
 pub mod as_apis;
 pub mod fd_ops;

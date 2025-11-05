@@ -4,7 +4,7 @@
 extern crate alloc;
 
 use alloc::format;
-use ms_std::{
+use as_std::{
     agent::FaaSFuncResult as Result,
     net::{TcpListener, TcpStream}, println,
 };

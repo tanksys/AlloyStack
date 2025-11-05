@@ -1,0 +1,33 @@
+[package]
+name = "libasvisor"
+version = "0.1.0"
+edition = "2021"
+# build = "build.rs"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[build-dependencies]
+lazy_static = "1.4.0"
+
+[dependencies]
+as_hostcall = { workspace = true }
+
+libloading = "0.8.0"
+anyhow = "1.0.75"
+lazy_static = "1.4.0"
+log = "0.4.20"
+env_logger = "0.10.0"
+xmas-elf = "0.9.0"                                     # use to parse dynlib elf file.
+nix = { version = "0.28.0", features = ["mman"] }      # use to call dlmopen, mmap.
+serde = { version = "1.0.183", features = ["derive"] }
+serde_json = "1.0.105"
+thiserror = "1.0.56"
+heapless = "0.8"
+
+[features]
+namespace = []
+serviceV2 = ["nix/mman"]
+enable_mpk = ["as_hostcall/enable_mpk"]
+pkey_per_func = ["enable_mpk"]
+
+default = []

@@ -1,16 +1,36 @@
 #![no_std]
 use alloc::{format, vec::Vec};
 
-use ms_std::{args, prelude::*};
-use ms_std_proc_macro::FaasData;
+use as_std::{
+    args,
+    prelude::*,
+    time::{SystemTime, UNIX_EPOCH},
+};
+use as_std_proc_macro::FaasData;
 
+#[allow(unused_imports)]
+use serde::{Deserialize, Serialize};
+
+#[cfg(feature = "pkey_per_func")]
+type NumberArray = heapless::Vec<u32, { 20 * 1024 * 1024 }>;
+#[cfg(not(feature = "pkey_per_func"))]
+type NumberArray = Vec<u32>;
+
+#[cfg_attr(feature = "file-based", derive(Serialize, Deserialize))]
 #[derive(Default, FaasData)]
 struct VecArg {
+    #[cfg(feature = "pkey_per_func")]
+    array: heapless::Vec<u32, { 20 * 1024 * 1024 }>,
+    #[cfg(not(feature = "pkey_per_func"))]
     array: Vec<u32>,
 }
 
 #[no_mangle]
 pub fn main() -> Result<()> {
+    println!(
+        "com_start3: {}",
+        SystemTime::now().duration_since(UNIX_EPOCH).as_micros() as f64 / 1000000f64
+    );
     let my_id = args::get("id").unwrap();
     let sorter_num: u32 = {
         let m = args::get("sorter_num").unwrap();
@@ -26,15 +46,19 @@ pub fn main() -> Result<()> {
     let mut merged_result: DataBuffer<VecArg> =
         DataBuffer::with_slot(format!("merge_result_{}", my_id));
 
-    merged_result.array = merge_partitions(partitions.iter().map(|buffer| &buffer.array).collect());
+    merge_partitions(
+        partitions.iter().map(|buffer| &buffer.array).collect(),
+        &mut merged_result.array,
+    );
     // println!("merged_result: {:?}", merged_result);
-
+    println!(
+        "com_end3: {}",
+        SystemTime::now().duration_since(UNIX_EPOCH).as_micros() as f64 / 1000000f64
+    );
     Ok(().into())
 }
 
-fn merge_partitions(partitions: Vec<&Vec<u32>>) -> Vec<u32> {
-    let mut result = Vec::new();
-
+fn merge_partitions(partitions: Vec<&NumberArray>, dst: &mut NumberArray) {
     let mut indices: Vec<usize> = partitions.iter().map(|_| 0).collect();
 
     loop {
@@ -52,12 +76,15 @@ fn merge_partitions(partitions: Vec<&Vec<u32>>) -> Vec<u32> {
 
         match min_partition {
             Some(partition_idx) => {
-                result.push(min_value);
+                #[allow(unused_variables)]
+                let ret = dst.push(min_value);
+                #[cfg(feature = "pkey_per_func")]
+                {
+                    ret.unwrap();
+                }
                 indices[partition_idx] += 1;
             }
             None => break,
         }
     }
-
-    result
 }

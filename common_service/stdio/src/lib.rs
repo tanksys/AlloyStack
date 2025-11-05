@@ -1,4 +1,4 @@
-use ms_hostcall::types::Size;
+use as_hostcall::types::Size;
 
 #[no_mangle]
 pub fn host_stdout(buf: &[u8]) -> Size {

@@ -13,6 +13,10 @@
       "libmm.so"
     ],
     [
+      "time",
+      "libtime.so"
+    ],
+    [
       "fatfs",
       "libfatfs.so"
     ]
@@ -39,7 +43,7 @@
       "libchecker.so"
     ]
   ],
-  "fs_image": "fs_images/fatfs_large_sort.img",
+  "fs_image": "fs_images/fatfs.img",
   "groups": [
     {
       "list": [
@@ -94,14 +98,6 @@
       ],
       "args": {
         "sorter_num": "3"
-      }
-    },
-    {
-      "list": [
-        "checker"
-      ],
-      "args": {
-        "merger_num": "3"
       }
     }
   ]

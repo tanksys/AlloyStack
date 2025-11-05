@@ -11,5 +11,5 @@ if [ -f "$image" ]; then
   rm "$image"
 fi
 
-dd if=/dev/zero of="$image" bs=1M seek=200 count=0 && \
+dd if=/dev/zero of="$image" bs=1M seek=512 count=0 && \
     mkfs.fat "$image"

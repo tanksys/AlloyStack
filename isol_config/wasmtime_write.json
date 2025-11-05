@@ -1,0 +1,26 @@
+{
+  "services": [
+    [
+      "fdtab",
+      "libfdtab.so"
+    ],
+    [
+      "stdio",
+      "libstdio.so"
+    ]
+  ],
+  "apps": [
+    [
+      "hello",
+      "libwasmtime_write.so"
+    ]
+  ],
+  "groups": [
+    {
+      "list": [
+        "hello"
+      ],
+      "args": {}
+    }
+  ]
+}

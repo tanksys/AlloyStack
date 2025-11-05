@@ -10,8 +10,8 @@ build = "../../build_user.rs"
 crate-type = ["dylib"]
 
 [dependencies]
-ms_std = { path = "../../ms_std", features = ["alloc_def", "unwinding"] }
+as_std = { path = "../../as_std", features = ["alloc_def", "unwinding"] }
 
 [features]
-mpk = ["ms_std/mpk"]
+mpk = ["as_std/mpk"]
 default = []

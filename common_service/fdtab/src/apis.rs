@@ -1,11 +1,11 @@
 use core::net::SocketAddrV4;
 
 use alloc::borrow::ToOwned;
-use ms_hostcall::{
+use as_hostcall::{
     fdtab::{FdtabError, FdtabResult},
     types::{Fd, OpenFlags, OpenMode, Size, SockFd, Stat},
 };
-use ms_std::libos::libos;
+use as_std::libos::libos;
 
 use crate::{DataSource, File, FD_TABLE};
 

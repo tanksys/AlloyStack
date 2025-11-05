@@ -1,5 +1,5 @@
 use alloc::sync::Arc;
-use ms_hostcall::{
+use as_hostcall::{
     fdtab::{FdtabError, FdtabResult},
     types::Fd,
 };

@@ -8,11 +8,11 @@ use std::{
 use nix::sys::epoll::{Epoll, EpollCreateFlags, EpollEvent, EpollFlags};
 use userfaultfd::{Uffd, UffdBuilder};
 
-use ms_hostcall::{
+use as_hostcall::{
     mmap_file_backend::{MmapFileErr, MmapFileResult},
     types::Fd,
 };
-use ms_std::libos::libos;
+use as_std::libos::libos;
 
 use crate::{
     acquire_regions_or_notify, acquire_register, do_page_fault, init_notify_pipe, read_notify_pipe,
@@ -102,7 +102,7 @@ pub fn register_file_backend(mm_region: &mut [c_void], file_fd: Fd) -> MmapFileR
         init_notify_pipe()?;
 
         libos!(spawn_fault_handler(
-            ms_std::init_context::isolation_ctx().isol_id
+            as_std::init_context::isolation_ctx().isol_id
         ))?;
     }
     // println!("spawn_fault_handler successfully.");
