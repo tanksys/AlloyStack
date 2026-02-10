@@ -1,0 +1,40 @@
+{
+    "services": [
+        [
+            "fdtab",
+            "libruxfdtab.so"
+        ],
+        [
+            "stdio",
+            "libstdio.so"
+        ],
+        [
+            "mm",
+            "libmm.so"
+        ],
+        [
+            "fatfs",
+            "libfatfs.so"
+        ],
+        [
+            "time",
+            "libtime.so"
+        ]
+    ],
+    "apps": [
+        [
+            "fs_list",
+            "libfs_list.so"
+        ] 
+    ],
+    "groups": [
+        {
+            "list": [
+                "fs_list"
+            ],
+            "args": {
+                "dir_name": "/"
+            }
+        }
+    ]
+}

@@ -5,7 +5,7 @@ enable_mpk := "0"
 enable_pkey_per_func := "0"
 enable_file_buffer := "0"
 
-enable_release := "1"
+enable_release := "0"
 
 mpk_flag := if enable_mpk == "1" {
     if enable_pkey_per_func == "1" { 

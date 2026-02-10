@@ -1,0 +1,23 @@
+[package]
+name = "fs_list"
+version = "0.1.0"
+edition = "2021"
+build = "../../build_user.rs"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+crate-type = ["dylib"]
+
+[dependencies]
+as_std = { path = "../../as_std", features = ["alloc_def", "panic_def"] }
+as_hostcall = { path = "../../as_hostcall" }
+as_std_proc_macro = { path = "../../as_std_proc_macro" }
+heapless = "0.8.0"
+serde = { version = "1.0.217", default-features = false, features = ["derive"] }
+
+[features]
+mpk = ["as_std/mpk"]
+pkey_per_func = ["mpk"]
+file-based = ["as_std/file-based"]
+
+default = []
