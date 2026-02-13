@@ -1,7 +1,7 @@
 
 set positional-arguments
 
-enable_mpk := "0"
+enable_mpk := "1"
 enable_pkey_per_func := "0"
 enable_file_buffer := "0"
 
@@ -29,7 +29,8 @@ rust_func func_name:
 
 libos lib_name:
     cargo build {{ release_flag }} {{ if enable_mpk == "1" { "--features mpk" } else { "" } }} \
-        --manifest-path common_service/{{ lib_name }}/Cargo.toml
+        --manifest-path common_service/{{ lib_name }}/Cargo.toml &&\
+    cp common_service/{{ lib_name }}/target/{{ profile }}/lib{{ lib_name }}.so ./target/{{ profile }}
 
 pass_args:
     just rust_func func_a
@@ -72,7 +73,7 @@ all_rust:
 run_rust_test:
     just all_libos
     just all_rust
-    ./scripts/run_tests.sh {{ mpk_flag }}
+    ./scripts/run_tests.sh {{release_flag}} {{ mpk_flag }} 
 
 cc_flags_p1 := "-Wl,--gc-sections -nostdlib -Wl,--whole-archive"
 cc_flags_p2 := "-Wl,--no-whole-archive -shared"
@@ -140,8 +141,9 @@ gen_data:
     sudo -E ./scripts/gen_data.py
 
 init:
-    rustup override set 'nightly-2023-12-01'
+    rustup override set 'nightly-2024-01-04'
     rustup target add x86_64-unknown-linux-musl
+    rustup target add x86_64-unknown-none
     [ -f fs_images/fatfs.img ] || unzip fs_images/fatfs.zip -d fs_images
     [ -d image_content ] || mkdir image_content
 
@@ -248,7 +250,7 @@ breakdown: asvisor all_libos
     target/{{profile}}/asvisor --files isol_config/parallel_sort_c5.json --metrics total-dur 2>&1 | grep 'total_dur'
     target/{{profile}}/asvisor --files isol_config/long_chain_n15.json --metrics total-dur 2>&1 | grep 'total_dur'
 
-p99: asvisor all_libos parallel_sort
+p99_latency: asvisor all_libos parallel_sort
     -sudo mount fs_images/fatfs.img image_content 2>/dev/null
     sudo -E ./scripts/gen_data.py 0 0 3 '25 * 1024 * 1024'
 
@@ -286,3 +288,56 @@ resource_consume: asvisor all_libos parallel_sort
     mv monitor.log as_parallel_sort_resouce_c5_25_80.txt
 
     ./scripts/comp_resource.py
+
+# WebAssembly compilation tasks using compile_wasm.sh script
+# Unified CWASM compilation entry point with customizable parameters
+cwasm_compile:
+    @echo "CWASM Compilation Tasks Available:"
+    @echo "  just cwasm_compile_help                  - Show help information"
+    @echo "  just cwasm_compile_all [OPTIONS]         - Compile all components with default settings, supports optional parameters"
+    @echo "  just cwasm_compile_wordcount [OPTIONS]   - Compile only wordcount workflow components, supports optional parameters"
+    @echo "  just cwasm_compile_parallel_sort [OPTIONS] - Compile only parallel_sort workflow components, supports optional parameters"
+    @echo ""
+    @echo "Optional parameters for all tasks:"
+    @echo "  --mode MODE         - Specify build mode (debug, release)"
+    @echo "  --concurrency N     - Specify concurrency level (1, 3, 5)"
+    @echo "  --cflags FLAGS      - Custom CFLAGS compilation parameters"
+
+cwasm_compile_help:
+    ./scripts/compile_wasm.sh --help
+
+cwasm_compile_all *args:
+    ./scripts/compile_wasm.sh {{args}}
+
+cwasm_compile_wordcount *args:
+    ./scripts/compile_wasm.sh --workflow wordcount {{args}}
+
+cwasm_compile_parallel_sort *args:
+    ./scripts/compile_wasm.sh --workflow parallel_sort {{args}}
+
+
+# C++ WebAssembly compilation tasks using compile_wasm_cpp.sh script
+# Unified C++ CWASM compilation entry point with customizable parameters
+ccwasm_compile:
+    @echo "C++ CWASM Compilation Tasks Available:"
+    @echo "  just ccwasm_compile_help                  - Show help information"
+    @echo "  just ccwasm_compile_all [OPTIONS]         - Compile all C++ components with default settings, supports optional parameters"
+    @echo "  just ccwasm_compile_wordcount [OPTIONS]   - Compile only C++ wordcount workflow components, supports optional parameters"
+    @echo "  just ccwasm_compile_parallel_sort [OPTIONS] - Compile only C++ parallel_sort workflow components, supports optional parameters"
+    @echo ""
+    @echo "Optional parameters for all tasks:"
+    @echo "  --mode MODE         - Specify build mode (debug, release)"
+    @echo "  --concurrency N     - Specify concurrency level (1, 3, 5)"
+    @echo "  --cflags FLAGS      - Custom CFLAGS compilation parameters"
+
+ccwasm_compile_help:
+    ./scripts/compile_wasm_cpp.sh --help
+
+ccwasm_compile_all *args:
+    ./scripts/compile_wasm_cpp.sh {{args}}
+
+ccwasm_compile_wordcount *args:
+    ./scripts/compile_wasm_cpp.sh --workflow wordcount {{args}}
+
+ccwasm_compile_parallel_sort *args:
+    ./scripts/compile_wasm_cpp.sh --workflow parallel_sort {{args}}

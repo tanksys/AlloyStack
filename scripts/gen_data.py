@@ -24,6 +24,8 @@ def gen_word_count(file_num: int, total_size: int):
 
 def gen_parallel_sort(file_num: int, total_size: int):
     import random
+    # 固定随机数种子，确保每次生成相同的数据
+    random.seed(42)
 
     one_size = int(total_size / file_num)
     for i in range(file_num):

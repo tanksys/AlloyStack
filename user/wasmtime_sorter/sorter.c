@@ -6,8 +6,13 @@
 
 __attribute__((import_module("env"), import_name("buffer_register"))) void buffer_register(void *slot_name, int name_size, void *buffer, int buffer_size);
 
+#ifndef MAX_ARRAY_LENGTH
 #define MAX_ARRAY_LENGTH 20000000
+#endif
+
+#ifndef MAX_BUFFER_SIZE
 #define MAX_BUFFER_SIZE 200000000
+#endif
 
 // 比较函数，用于 qsort
 int compare(const void *a, const void *b) {
@@ -23,9 +28,20 @@ char nc(FILE *stream) {
 
 int readfile(FILE *stream) {
   int x = 0, ch = nc(stream);
-  for (; ch < '0' || ch > '9'; ch = nc(stream));
+  
+  // 如果第一个字符就是EOF，直接返回0
+  if (ch == EOF) return 0;
+  
+  // 跳过非数字字符
+  for (; ch != EOF && (ch < '0' || ch > '9'); ch = nc(stream));
+  
+  // 如果跳过非数字字符后遇到EOF，返回0
+  if (ch == EOF) return 0;
+  
+  // 读取数字
   for (; ch >= '0' && ch <= '9'; ch = nc(stream))
     x = (x << 1) + (x << 3) + (ch ^ 48);
+    
   return x;
 }
 
@@ -44,32 +60,28 @@ int main(int argc, char* argv[]) {
     }
     
     int index = 0;
-    // char line[1024];
-    // while (fgets(line, sizeof(line), file)) {
-    //     char *token = strtok(line, " \n"); // 以空格和换行作为分隔符
-    //     while (token != NULL) {
-    //         array[index++] = atoi(token);
-    //         token = strtok(NULL, " \n"); //读取下一个单词
-    //     }
-    // }
-    // time_t now;
-    // time(&now);
-    // printf("%ld read start\n", now);
-    // write(1, "read start\n", sizeof("read start\n"));
+    printf("DEBUG: Starting to read file...\n");
+    fflush(stdout);
+    
     char number[10];
-    while (array[index++] = readfile(file));
-    // time(&now);
-    // printf("%ld read finished\n", now);
-    // write(1, "read finished\n", sizeof("read finished\n"));
-    // while (fscanf(file, "%s", number) != EOF) {
-    //     array[index] = atoi(number);
-    //     // printf("array[%d]: %d\n", index, array[index]);
-    //     index++;
-    // }
-    // printf("sorter_%d read finished!\n", id);
-    // printf("index: %d\n", index);
+    while (array[index++] = readfile(file)) {
+        if (index % 10000 == 0) {
+            // printf("DEBUG: Read %d numbers so far\n", index);
+            fflush(stdout);
+        }
+    }
+    
+    printf("DEBUG: Finished reading, total count: %d\n", index);
+    fflush(stdout);
+    
     fclose(file);
-    // qsort(array, index, sizeof(int), compare);
+    printf("DEBUG: Starting qsort...\n");
+    fflush(stdout);
+    
+    qsort(array, index, sizeof(int), compare);
+    
+    printf("DEBUG: Finished qsort\n");
+    fflush(stdout);
 
     // printf("sorter_%d sort finished!\n", id);
 

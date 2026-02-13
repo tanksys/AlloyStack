@@ -5,8 +5,13 @@
 __attribute__((import_module("env"), import_name("buffer_register"))) void buffer_register(void *slot_name, int name_size, void *buffer, int buffer_size);
 __attribute__((import_module("env"), import_name("access_buffer"))) void access_buffer(void *slot_name, int name_size, void *buffer, int buffer_size);
 
+#ifndef MAX_ARRAY_LENGTH
 #define MAX_ARRAY_LENGTH 20000000
+#endif
+
+#ifndef MAX_BUFFER_SIZE
 #define MAX_BUFFER_SIZE 200000000
+#endif
 
 int sorter_array[MAX_ARRAY_LENGTH]; 
 
@@ -14,7 +19,9 @@ int main(int argc, char* argv[]) {
     int id = atoi(argv[1]);
     int sorter_num = atoi(argv[2]);
     int merger_num = atoi(argv[3]);
+
     printf("spliter_%d start!\n", id);
+    // printf("???\n");
     char slot_name[20];
     int bufferSize = MAX_BUFFER_SIZE;
     char *ptr;
@@ -23,6 +30,7 @@ int main(int argc, char* argv[]) {
     // access pivot buffer
     int pivot_array[10];
     int pivot_index = 0;
+        
     if (merger_num > 1) {
         sprintf(slot_name, "pivot_%d", id);
         char *pivot_buffer;
@@ -35,7 +43,7 @@ int main(int argc, char* argv[]) {
         pivot_buffer[0] = '\0'; // 初始化为空字符串
         access_buffer(slot_name, strlen(slot_name), pivot_buffer, bufferSize);
         ptr = pivot_buffer;
-        printf("pivot_buffer: %s", pivot_buffer);
+        // printf("pivot_buffer: %s", pivot_buffer);
         while (sscanf(ptr, "%d", &num) == 1) {
             pivot_array[pivot_index] = num;
             pivot_index++;
@@ -125,7 +133,7 @@ int main(int argc, char* argv[]) {
         free(buffer);
         free(array[i]);
     }
-    free(array_index);
+    // free(array_index);
     printf("spliter_%d all finished!\n", id);
     return 0;
 }

@@ -6,10 +6,23 @@
 
 __attribute__((import_module("env"), import_name("buffer_register"))) void buffer_register(void *slot_name, int name_size, void *buffer, int buffer_size);
 
+
+// 允许通过编译参数覆盖默认值
+#ifndef MAX_WORD_LENGTH
 #define MAX_WORD_LENGTH 100
+#endif
+
+#ifndef MAX_WORDS
 #define MAX_WORDS 8000
+#endif
+
+#ifndef MAX_SLOT_NUM
 #define MAX_SLOT_NUM 100
+#endif
+
+#ifndef MAX_BUFFER_SIZE
 #define MAX_BUFFER_SIZE 8000
+#endif
 
 
 void to_lowercase(char *str) {
@@ -111,7 +124,7 @@ int main(int argc, char* argv[]) {
         free(slot_name[i]); // 释放 strdup 分配的内存
         free(buffer[i]);    // 释放 buffer
     }
-    write(1, "mapper end!\n", sizeof("mapper end!\n"));
-    // printf("mapper_%d finished!\n", id);
+    // write(1, "mapper end!\n", strlen("mapper end!\n"));
+    printf("mapper_%d finished!\n", id);
     return 0;
 }

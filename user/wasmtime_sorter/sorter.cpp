@@ -17,8 +17,13 @@ using namespace std;
 
 __attribute__((import_module("env"), import_name("buffer_register"))) void buffer_register(void *slot_name, int name_size, void *buffer, int buffer_size);
 
+#ifndef MAX_ARRAY_LENGTH
 #define MAX_ARRAY_LENGTH 8000000
+#endif
+
+#ifndef MAX_BUFFER_SIZE
 #define MAX_BUFFER_SIZE 80000000
+#endif
 
 // 比较函数，用于 qsort
 int compare(const void *a, const void *b) {

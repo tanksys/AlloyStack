@@ -72,6 +72,7 @@ reducer3 has counted 362 words
 ```
 
 ### Testing Other Workflows
+```
 The same 3-step process applies to any workflow:
 
 1.Build services: `just all_libos`
@@ -79,3 +80,24 @@ The same 3-step process applies to any workflow:
 2.Build functions: `just rust_func <function_name>`
 
 3.Execute workflow: `target/release/asvisor --files isol_config/<workflow_name>.json`
+```
+
+### Custom parameters recompile for Wasmtime module
+```
+Pre-install wasmtime-cli 22.0.0 、WASI-sdk
+
+Modify the build.sh script in the user corresponding function directory.
+
+User manually sets environment variables
+export CC="/opt/wasi-sdk/bin/clang"
+export CPP="/opt/wasi-sdk/bin/clang++"
+
+wasmtime_wordcount：
+just cwasm_compile_wordcount *args:
+
+wasmtime_parallel_sort：
+just cwasm_compile_parallel_sort *args:
+
+Run before testing or compile other modules:
+unset CC && export CC=/usr/bin/clang && echo "CC is now: $CC" 
+```
