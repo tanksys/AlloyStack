@@ -1,0 +1,20 @@
+{
+    "services": [
+        ["fdtab", "libruxfdtab.so"],
+        ["stdio", "libstdio.so"],
+        ["mm", "libmm.so"],
+        ["fatfs", "libfatfs.so"],
+        ["time", "libtime.so"]
+    ],
+    "apps": [
+        ["fs_cat", "libfs_cat.so"]
+    ],
+    "groups": [
+        {
+            "list": ["fs_cat"],
+            "args": {
+                "file_path": "/lines.txt"
+            }
+        }
+    ]
+}
