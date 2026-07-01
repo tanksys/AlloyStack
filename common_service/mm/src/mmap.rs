@@ -3,25 +3,27 @@ extern crate alloc;
 use core::alloc::Layout;
 
 use alloc::borrow::ToOwned;
-use libc::c_void;
 use as_hostcall::{
     mm::{MMError, MMResult, ProtFlags},
     types::Fd,
 };
 use as_std::libos::libos;
+use libc::c_void;
 
 const PAGE_SIZE: usize = 0x1000;
 
+fn page_aligned_length(length: usize) -> MMResult<usize> {
+    length
+        .checked_add(PAGE_SIZE - 1)
+        .map(|length| length & !(PAGE_SIZE - 1))
+        .filter(|length| *length != 0)
+        .ok_or(MMError::NoMemory)
+}
+
 #[no_mangle]
 pub fn libos_mmap(addr: usize, length: usize, prot: ProtFlags, fd: Fd) -> MMResult<usize> {
-    if length % PAGE_SIZE > 0 {
-        Err(MMError::InvaildArg(
-            "length % PAGE_SIZE == 0".to_owned(),
-            length,
-        ))?
-    }
-
-    let layout = Layout::from_size_align(length, PAGE_SIZE)?;
+    let aligned_length = page_aligned_length(length)?;
+    let layout = Layout::from_size_align(aligned_length, PAGE_SIZE)?;
 
     let mmap_addr = unsafe {
         let addr = {
@@ -31,21 +33,23 @@ pub fn libos_mmap(addr: usize, length: usize, prot: ProtFlags, fd: Fd) -> MMResu
                 addr as *mut libc::c_void
             }
         };
-        if libc::munmap(addr, length) != 0 {
+        if addr.is_null() {
+            Err(MMError::NoMemory)?
+        }
+        if libc::munmap(addr, aligned_length) != 0 {
             Err(MMError::LibcErr("munmap failed".to_owned()))?
         }
         if libc::mmap(
             addr,
-            length,
+            aligned_length,
             trans_protflag(prot),
-            libc::MAP_PRIVATE | libc::MAP_ANONYMOUS,
+            libc::MAP_PRIVATE | libc::MAP_ANONYMOUS | libc::MAP_FIXED,
             0,
             0,
         ) != addr
         {
             Err(MMError::LibcErr("mmap failed".to_owned()))?
         }
-
         addr as usize
     };
 
@@ -53,7 +57,8 @@ pub fn libos_mmap(addr: usize, length: usize, prot: ProtFlags, fd: Fd) -> MMResu
         return Ok(mmap_addr);
     }
 
-    let mm_region = unsafe { core::slice::from_raw_parts_mut(mmap_addr as *mut c_void, length) };
+    let mm_region =
+        unsafe { core::slice::from_raw_parts_mut(mmap_addr as *mut c_void, aligned_length) };
     libos!(register_file_backend(mm_region, fd))?;
 
     // println!("finish mmap, mmap_addr={}", mmap_addr);
@@ -66,7 +71,7 @@ pub fn libos_munmap(mem_region: &mut [u8], file_based: bool) -> MMResult<()> {
         libos!(unregister_file_backend(mem_region.as_ptr() as usize))?;
     }
 
-    let aligned_length = (mem_region.len() + PAGE_SIZE - 1) & (!PAGE_SIZE + 1);
+    let aligned_length = page_aligned_length(mem_region.len())?;
     unsafe {
         if libc::mprotect(
             mem_region.as_mut_ptr() as usize as *mut libc::c_void,
@@ -87,7 +92,7 @@ pub fn libos_munmap(mem_region: &mut [u8], file_based: bool) -> MMResult<()> {
 
 #[no_mangle]
 pub fn libos_mprotect(addr: usize, length: usize, prot: ProtFlags) -> MMResult<()> {
-    let aligned_length = (length + PAGE_SIZE - 1) & (!PAGE_SIZE + 1);
+    let aligned_length = page_aligned_length(length)?;
     unsafe {
         if libc::mprotect(
             addr as *mut libc::c_void,

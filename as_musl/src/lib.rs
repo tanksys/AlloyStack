@@ -44,6 +44,7 @@ const SYS_BRK: isize = 12;
 const SYS_IOCTL: isize = 16;
 const SYS_READV: isize = 19;
 const SYS_WRITEV: isize = 20;
+const SYS_MREMAP: isize = 25;
 const SYS_MADVISE: isize = 28;
 const SYS_FCNTL: isize = 72;
 const SYS_GETTID: isize = 186;
@@ -67,6 +68,7 @@ const F_SETFL: isize = 4;
 const PROT_READ: isize = 1;
 const PROT_WRITE: isize = 2;
 const PROT_EXEC: isize = 4;
+const MREMAP_MAYMOVE: isize = 1;
 
 static REPORTED_SYSCALLS: [AtomicU64; 8] = [
     AtomicU64::new(0),
@@ -477,6 +479,28 @@ pub unsafe extern "C" fn alloy_syscall(
                 Ok(()) => 0,
                 Err(_) => neg_errno(EINVAL),
             }
+        }
+        SYS_MREMAP => {
+            if a1 == 0 || a2 == 0 || a3 == 0 || a4 != MREMAP_MAYMOVE || a5 != 0 {
+                return neg_errno(EINVAL);
+            }
+            let prot = ProtFlags::READ | ProtFlags::WRITE;
+            let new_addr = match libos!(mmap(0, a3 as usize, prot, u32::MAX)) {
+                Ok(addr) => addr,
+                Err(_) => return neg_errno(ENOMEM),
+            };
+            core::ptr::copy_nonoverlapping(
+                a1 as *const u8,
+                new_addr as *mut u8,
+                core::cmp::min(a2 as usize, a3 as usize),
+            );
+            let old_region = core::slice::from_raw_parts_mut(a1 as *mut u8, a2 as usize);
+            if libos!(munmap(old_region, false)).is_err() {
+                let new_region = core::slice::from_raw_parts_mut(new_addr as *mut u8, a3 as usize);
+                let _ = libos!(munmap(new_region, false));
+                return neg_errno(EINVAL);
+            }
+            new_addr as isize
         }
         SYS_MADVISE => 0,
         SYS_BRK => neg_errno(ENOMEM),

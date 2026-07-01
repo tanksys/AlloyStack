@@ -20,14 +20,21 @@ int main(int argc, char **argv)
 {
     const char *id = find_id(argc, argv);
     char path[64];
-    char *payload = malloc(8192);
+    char *payload = malloc(256 * 1024);
     char readback[128] = {0};
     struct stat st;
 
     if (!payload)
         return 10;
-    memset(payload, 'A', 8191);
-    payload[8191] = '\0';
+    memset(payload, 'A', 256 * 1024 - 1);
+    payload[256 * 1024 - 1] = '\0';
+    char *grown = realloc(payload, 512 * 1024);
+    if (!grown) {
+        free(payload);
+        return 18;
+    }
+    payload = grown;
+    memset(payload + 256 * 1024, 'B', 256 * 1024);
 
     if (snprintf(path, sizeof(path), "musl-%s.txt", id) < 0) {
         free(payload);
