@@ -4,3 +4,6 @@
 [submodule "third_party/musl"]
 	path = third_party/musl
 	url = https://git.musl-libc.org/git/musl
+[submodule "third_party/cpython"]
+	path = third_party/cpython
+	url = https://github.com/python/cpython.git

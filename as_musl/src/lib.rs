@@ -35,20 +35,26 @@ const SYS_READ: isize = 0;
 const SYS_WRITE: isize = 1;
 const SYS_OPEN: isize = 2;
 const SYS_CLOSE: isize = 3;
+const SYS_STAT: isize = 4;
 const SYS_FSTAT: isize = 5;
 const SYS_LSEEK: isize = 8;
 const SYS_MMAP: isize = 9;
 const SYS_MPROTECT: isize = 10;
 const SYS_MUNMAP: isize = 11;
 const SYS_BRK: isize = 12;
+const SYS_RT_SIGPROCMASK: isize = 14;
 const SYS_IOCTL: isize = 16;
 const SYS_READV: isize = 19;
 const SYS_WRITEV: isize = 20;
 const SYS_MREMAP: isize = 25;
 const SYS_MADVISE: isize = 28;
+const SYS_GETCWD: isize = 79;
+const SYS_READLINK: isize = 89;
 const SYS_FCNTL: isize = 72;
 const SYS_GETTID: isize = 186;
 const SYS_FUTEX: isize = 202;
+const SYS_GETDENTS64: isize = 217;
+const SYS_CLOCK_GETTIME: isize = 228;
 const SYS_OPENAT: isize = 257;
 const SYS_NEWFSTATAT: isize = 262;
 const SYS_GETRANDOM: isize = 318;
@@ -59,6 +65,7 @@ const O_RDWR: isize = 0o2;
 const O_CREAT: isize = 0o100;
 const O_TRUNC: isize = 0o1000;
 const O_APPEND: isize = 0o2000;
+const O_DIRECTORY: isize = 0o200000;
 
 const F_GETFD: isize = 1;
 const F_SETFD: isize = 2;
@@ -277,6 +284,41 @@ struct IoVec {
     len: usize,
 }
 
+#[repr(C)]
+struct LinuxTimeSpec {
+    sec: i64,
+    nsec: i64,
+}
+
+fn character_device_stat() -> Stat {
+    Stat {
+        st_dev: 0,
+        st_ino: 0,
+        st_nlink: 1,
+        st_mode: 0o020666,
+        st_uid: 0,
+        st_gid: 0,
+        __pad0: 0,
+        st_rdev: 0,
+        st_size: 0,
+        st_blksize: 0,
+        st_blocks: 0,
+        st_atime: as_hostcall::types::TimeSpec {
+            tv_sec: 0,
+            tv_nsec: 0,
+        },
+        st_mtime: as_hostcall::types::TimeSpec {
+            tv_sec: 0,
+            tv_nsec: 0,
+        },
+        st_ctime: as_hostcall::types::TimeSpec {
+            tv_sec: 0,
+            tv_nsec: 0,
+        },
+        __unused: [0, 0, 0],
+    }
+}
+
 fn neg_errno(errno: isize) -> isize {
     -errno
 }
@@ -302,6 +344,14 @@ fn open_file(path: *const c_char, flags: isize) -> isize {
         Ok(path) => path,
         Err(_) => return neg_errno(EINVAL),
     };
+    let path = path.trim_start_matches('/');
+
+    if flags & O_DIRECTORY != 0 {
+        return match libos!(open_dir(path)) {
+            Ok(fd) => fd as isize,
+            Err(error) => fd_error(error, true),
+        };
+    }
 
     let mode = match flags & O_ACCMODE {
         O_WRONLY => OpenMode::WR,
@@ -322,6 +372,23 @@ fn open_file(path: *const c_char, flags: isize) -> isize {
     match libos!(open(path, open_flags, mode)) {
         Ok(fd) => fd as isize,
         Err(error) => fd_error(error, true),
+    }
+}
+
+unsafe fn stat_path(path: *const c_char, stat: *mut Stat) -> isize {
+    if path.is_null() || stat.is_null() {
+        return neg_errno(EFAULT);
+    }
+    let path = match CStr::from_ptr(path).to_str() {
+        Ok(path) => path,
+        Err(_) => return neg_errno(EINVAL),
+    };
+    match libos!(path_stat(path)) {
+        Ok(metadata) => {
+            ptr::write(stat, metadata);
+            0
+        }
+        Err(_) => neg_errno(ENOENT),
     }
 }
 
@@ -422,9 +489,24 @@ pub unsafe extern "C" fn alloy_syscall(
             Ok(offset) => offset as isize,
             Err(error) => fd_error(error, false),
         },
+        SYS_GETDENTS64 => {
+            if (a2 as *mut u8).is_null() && a3 != 0 {
+                return neg_errno(EFAULT);
+            }
+            let buffer = core::slice::from_raw_parts_mut(a2 as *mut u8, a3 as usize);
+            match libos!(getdents(a1 as u32, buffer)) {
+                Ok(size) => size as isize,
+                Err(error) => fd_error(error, false),
+            }
+        }
+        SYS_STAT => stat_path(a1 as *const c_char, a2 as *mut Stat),
         SYS_FSTAT => {
             if (a2 as *mut Stat).is_null() {
                 return neg_errno(EFAULT);
+            }
+            if (0..=2).contains(&a1) {
+                core::ptr::write(a2 as *mut Stat, character_device_stat());
+                return 0;
             }
             match libos!(stat(a1 as u32)) {
                 Ok(stat) => {
@@ -437,6 +519,7 @@ pub unsafe extern "C" fn alloy_syscall(
         SYS_NEWFSTATAT if a1 >= 0 && a4 & AT_EMPTY_PATH != 0 => {
             alloy_syscall(SYS_FSTAT, a1, a3, 0, 0, 0, 0)
         }
+        SYS_NEWFSTATAT if a1 == AT_FDCWD => stat_path(a2 as *const c_char, a3 as *mut Stat),
         SYS_MMAP => {
             let mut prot = ProtFlags::empty();
             if a3 & PROT_READ != 0 {
@@ -504,7 +587,23 @@ pub unsafe extern "C" fn alloy_syscall(
         }
         SYS_MADVISE => 0,
         SYS_BRK => neg_errno(ENOMEM),
+        // CPython is configured not to install signal handlers, but musl still
+        // masks application signals while updating its pthread key table.
+        SYS_RT_SIGPROCMASK => 0,
         SYS_IOCTL => neg_errno(ENOTTY),
+        SYS_GETCWD => {
+            if a1 == 0 {
+                return neg_errno(EFAULT);
+            }
+            if a2 < 2 {
+                return neg_errno(ENOMEM);
+            }
+            let buffer = core::slice::from_raw_parts_mut(a1 as *mut u8, a2 as usize);
+            buffer[0] = b'/';
+            buffer[1] = 0;
+            2
+        }
+        SYS_READLINK => neg_errno(EINVAL),
         SYS_FCNTL => match a2 {
             F_GETFD | F_GETFL => 0,
             F_SETFD | F_SETFL => 0,
@@ -519,6 +618,24 @@ pub unsafe extern "C" fn alloy_syscall(
             a6 as i32
         )),
         SYS_GETTID => libos!(gettid()),
+        SYS_CLOCK_GETTIME => {
+            if (a2 as *mut LinuxTimeSpec).is_null() {
+                return neg_errno(EFAULT);
+            }
+            match libos!(get_time()) {
+                Ok(nanos) => {
+                    ptr::write(
+                        a2 as *mut LinuxTimeSpec,
+                        LinuxTimeSpec {
+                            sec: (nanos / 1_000_000_000) as i64,
+                            nsec: (nanos % 1_000_000_000) as i64,
+                        },
+                    );
+                    0
+                }
+                Err(_) => neg_errno(EINVAL),
+            }
+        }
         SYS_GETRANDOM => libos!(getrandom(a1 as *mut u8, a2 as usize, a3 as u32)),
         _ => report_unsupported(number),
     }
@@ -529,12 +646,16 @@ extern "C" {
     fn alloy_musl_flush() -> i32;
 }
 
-pub unsafe fn run_c_main(
+unsafe fn run_c_main_impl(
     function_name: &str,
     c_main: unsafe extern "C" fn(i32, *mut *mut c_char) -> i32,
+    flush: bool,
 ) -> FaaSFuncResult<()> {
     alloy_musl_thread_init();
 
+    // Process-style runtimes may not leave the app allocator usable for
+    // teardown. The no-flush entry preallocates its result before C runs.
+    let preallocated_success = if flush { None } else { Some(().into()) };
     let mut storage: Vec<Vec<u8>> = Vec::new();
     let mut program = function_name.as_bytes().to_vec();
     program.push(0);
@@ -556,14 +677,34 @@ pub unsafe fn run_c_main(
     argv.push(core::ptr::null_mut());
 
     let code = c_main((argv.len() - 1) as i32, argv.as_mut_ptr());
-    let flush_code = alloy_musl_flush();
+    let flush_code = if flush { alloy_musl_flush() } else { 0 };
+    if !flush {
+        // The isolation owns this heap and reclaims it when unloaded. Avoid
+        // touching allocator metadata after a process-style libc runtime ran.
+        core::mem::forget(argv);
+        core::mem::forget(storage);
+    }
     if code != 0 {
         Err(format!("C main returned {}", code).into())
     } else if flush_code != 0 {
         Err(String::from("musl fflush failed").into())
     } else {
-        Ok(().into())
+        Ok(preallocated_success.unwrap_or_else(|| ().into()))
     }
+}
+
+pub unsafe fn run_c_main(
+    function_name: &str,
+    c_main: unsafe extern "C" fn(i32, *mut *mut c_char) -> i32,
+) -> FaaSFuncResult<()> {
+    run_c_main_impl(function_name, c_main, true)
+}
+
+pub unsafe fn run_c_main_no_flush(
+    function_name: &str,
+    c_main: unsafe extern "C" fn(i32, *mut *mut c_char) -> i32,
+) -> FaaSFuncResult<()> {
+    run_c_main_impl(function_name, c_main, false)
 }
 
 pub macro entry($c_main:ident) {
@@ -574,6 +715,17 @@ pub macro entry($c_main:ident) {
     #[no_mangle]
     pub fn main() -> $crate::FaaSFuncResult<()> {
         unsafe { $crate::run_c_main(env!("CARGO_PKG_NAME"), $c_main) }
+    }
+}
+
+pub macro entry_no_flush($c_main:ident) {
+    extern "C" {
+        fn $c_main(argc: i32, argv: *mut *mut core::ffi::c_char) -> i32;
+    }
+
+    #[no_mangle]
+    pub fn main() -> $crate::FaaSFuncResult<()> {
+        unsafe { $crate::run_c_main_no_flush(env!("CARGO_PKG_NAME"), $c_main) }
     }
 }
 

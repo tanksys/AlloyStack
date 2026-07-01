@@ -131,6 +131,10 @@ musl_parallel_sort: musl
 musl_long_chain: musl
     cargo build {{ release_flag }} {{ mpk_feature_flag }} --manifest-path user/musl_longchain/Cargo.toml
 
+musl_cpython: musl
+    bash scripts/build_cpython_musl.sh
+    cargo build {{ release_flag }} {{ mpk_feature_flag }} --manifest-path user/musl_cpython/Cargo.toml
+
 all_musl_c: musl_wordcount musl_parallel_sort musl_long_chain
 
 musl_c_end_to_end_latency: asvisor all_libos all_c_wasm all_musl_c

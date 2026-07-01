@@ -1,6 +1,6 @@
 use core::net::SocketAddrV4;
 
-use alloc::borrow::ToOwned;
+use alloc::{borrow::ToOwned, string::String, vec, vec::Vec};
 use as_hostcall::{
     fdtab::{FdtabError, FdtabResult},
     types::{Fd, OpenFlags, OpenMode, Size, SockFd, Stat},
@@ -25,6 +25,11 @@ pub fn read(fd: Fd, buf: &mut [u8]) -> FdtabResult<Size> {
         Ok(match file.src {
             DataSource::FatFS(raw_fd) => libos!(fatfs_read(raw_fd, buf))?,
             DataSource::Net(socket) => libos!(recv(socket, buf))?,
+            DataSource::Directory { .. } => Err(FdtabError::UndefinedOperation {
+                op: "read".to_owned(),
+                fd,
+                fd_type: "Directory".to_owned(),
+            })?,
         })
     })
 }
@@ -47,6 +52,11 @@ pub fn write(fd: Fd, buf: &[u8]) -> FdtabResult<Size> {
         Ok(match file.src {
             DataSource::FatFS(raw_fd) => libos!(fatfs_write(raw_fd, buf))?,
             DataSource::Net(sockfd) => libos!(send(sockfd, buf)).map(|_| buf.len())?,
+            DataSource::Directory { .. } => Err(FdtabError::UndefinedOperation {
+                op: "write".to_owned(),
+                fd,
+                fd_type: "Directory".to_owned(),
+            })?,
         })
     })
 }
@@ -66,6 +76,11 @@ pub fn lseek(fd: Fd, pos: u32) -> FdtabResult<()> {
                 op: "lseek".to_owned(),
                 fd,
                 fd_type: "Net".to_owned(),
+            })?,
+            DataSource::Directory { .. } => Err(FdtabError::UndefinedOperation {
+                op: "lseek".to_owned(),
+                fd,
+                fd_type: "Directory".to_owned(),
             })?,
         };
         Ok(())
@@ -88,6 +103,11 @@ pub fn lseek64(fd: Fd, offset: i64, whence: i32) -> FdtabResult<i64> {
                 fd,
                 fd_type: "Net".to_owned(),
             }),
+            DataSource::Directory { .. } => Err(FdtabError::UndefinedOperation {
+                op: "lseek64".to_owned(),
+                fd,
+                fd_type: "Directory".to_owned(),
+            }),
         }
     })
 }
@@ -108,7 +128,131 @@ pub fn stat(fd: Fd) -> FdtabResult<Stat> {
                 fd,
                 fd_type: "Net".to_owned(),
             })?,
+            DataSource::Directory { .. } => Stat {
+                st_dev: 0,
+                st_ino: 0,
+                st_nlink: 1,
+                st_mode: 0o040755,
+                st_uid: 0,
+                st_gid: 0,
+                __pad0: 0,
+                st_rdev: 0,
+                st_size: 0,
+                st_blksize: 0,
+                st_blocks: 0,
+                st_atime: as_hostcall::types::TimeSpec {
+                    tv_sec: 0,
+                    tv_nsec: 0,
+                },
+                st_mtime: as_hostcall::types::TimeSpec {
+                    tv_sec: 0,
+                    tv_nsec: 0,
+                },
+                st_ctime: as_hostcall::types::TimeSpec {
+                    tv_sec: 0,
+                    tv_nsec: 0,
+                },
+                __unused: [0, 0, 0],
+            },
         })
+    })
+}
+
+#[no_mangle]
+pub fn path_stat(path: &str) -> FdtabResult<Stat> {
+    Ok(libos!(fatfs_path_stat(path))?)
+}
+
+#[no_mangle]
+pub fn read_dir(path: &str) -> FdtabResult<alloc::vec::Vec<as_hostcall::types::DirEntry>> {
+    let required = libos!(fatfs_readdir(path, &mut []))?;
+    let mut packed = vec![0; required];
+    let written = libos!(fatfs_readdir(path, &mut packed))?;
+    packed.truncate(written);
+
+    let mut entries = Vec::new();
+    let mut cursor = 0;
+    while cursor < packed.len() {
+        if packed.len() - cursor < 3 {
+            return Err(FdtabError::RuxfsError("invalid directory record".to_owned()));
+        }
+        let entry_type = packed[cursor] as u32;
+        let name_len = u16::from_ne_bytes([packed[cursor + 1], packed[cursor + 2]]) as usize;
+        cursor += 3;
+        if name_len > packed.len() - cursor {
+            return Err(FdtabError::RuxfsError("invalid directory name".to_owned()));
+        }
+        let entry_name = core::str::from_utf8(&packed[cursor..cursor + name_len])
+            .map_err(|_| FdtabError::RuxfsError("non-UTF-8 directory name".to_owned()))?;
+        entries.push(as_hostcall::types::DirEntry {
+            dir_path: String::from(path),
+            entry_name: String::from(entry_name),
+            entry_type,
+        });
+        cursor += name_len;
+    }
+    Ok(entries)
+}
+
+#[no_mangle]
+pub fn open_dir(path: &str) -> FdtabResult<Fd> {
+    const HEADER_LEN: usize = 19;
+
+    let portable = read_dir(path)?;
+    let required = portable
+        .iter()
+        .map(|entry| (HEADER_LEN + entry.entry_name.len() + 1 + 7) & !7)
+        .sum();
+    let mut entries = vec![0; required];
+    let mut cursor = 0;
+    for (index, entry) in portable.iter().enumerate() {
+        let name = entry.entry_name.as_bytes();
+        let record_len = (HEADER_LEN + name.len() + 1 + 7) & !7;
+        let record = &mut entries[cursor..cursor + record_len];
+        record[0..8].copy_from_slice(&((index + 1) as u64).to_ne_bytes());
+        record[8..16].copy_from_slice(&((index + 1) as i64).to_ne_bytes());
+        record[16..18].copy_from_slice(&(record_len as u16).to_ne_bytes());
+        record[18] = entry.entry_type as u8;
+        record[HEADER_LEN..HEADER_LEN + name.len()].copy_from_slice(name);
+        cursor += record_len;
+    }
+    Ok(FD_TABLE.add_file(File {
+        mode: OpenMode::RD,
+        src: DataSource::Directory { entries, cursor: 0 },
+    }))
+}
+
+#[no_mangle]
+pub fn getdents(fd: Fd, buffer: &mut [u8]) -> FdtabResult<Size> {
+    FD_TABLE.with_file_mut(fd, |file| -> FdtabResult<Size> {
+        let file = file.ok_or(FdtabError::NoExistFd(fd))?;
+        let DataSource::Directory { entries, cursor } = &mut file.src else {
+            return Err(FdtabError::UndefinedOperation {
+                op: "getdents".to_owned(),
+                fd,
+                fd_type: "non-directory".to_owned(),
+            });
+        };
+
+        let mut written = 0usize;
+        while *cursor < entries.len() {
+            if entries.len() - *cursor < 18 {
+                return Err(FdtabError::RuxfsError("invalid dirent record".to_owned()));
+            }
+            let record_len =
+                u16::from_ne_bytes([entries[*cursor + 16], entries[*cursor + 17]]) as usize;
+            if record_len == 0 || record_len > entries.len() - *cursor {
+                return Err(FdtabError::RuxfsError("invalid dirent length".to_owned()));
+            }
+            if record_len > buffer.len() - written {
+                break;
+            }
+            buffer[written..written + record_len]
+                .copy_from_slice(&entries[*cursor..*cursor + record_len]);
+            *cursor += record_len;
+            written += record_len;
+        }
+        Ok(written)
     })
 }
 
@@ -134,6 +278,7 @@ pub fn close(fd: Fd) -> FdtabResult<()> {
     match file.src {
         DataSource::FatFS(raw_fd) => libos!(fatfs_close(raw_fd))?,
         DataSource::Net(socket) => libos!(smol_close(socket))?,
+        DataSource::Directory { .. } => {}
     };
     Ok(())
 }

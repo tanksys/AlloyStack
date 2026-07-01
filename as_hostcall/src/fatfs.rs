@@ -10,6 +10,8 @@ pub type FatfsCloseFunc = fn(Fd) -> FatfsResult<()>;
 pub type FatfsSeekFunc = fn(Fd, u32) -> FatfsResult<()>;
 pub type FatfsSeek64Func = fn(Fd, i64, i32) -> FatfsResult<i64>;
 pub type FatfsStatFunc = fn(Fd) -> FatfsResult<Stat>;
+pub type FatfsPathStatFunc = fn(&str) -> FatfsResult<Stat>;
+pub type FatfsReadDirFunc = fn(&str, &mut [u8]) -> FatfsResult<Size>;
 
 pub type FatfsResult<T> = Result<T, FatfsError>;
 

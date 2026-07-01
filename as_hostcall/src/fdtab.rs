@@ -10,12 +10,15 @@ use crate::{
 };
 
 pub type OpenFunc = fn(&str, OpenFlags, OpenMode) -> FdtabResult<Fd>;
+pub type OpenDirFunc = fn(&str) -> FdtabResult<Fd>;
+pub type GetDentsFunc = fn(Fd, &mut [u8]) -> FdtabResult<Size>;
 pub type WriteFunc = fn(Fd, &[u8]) -> FdtabResult<Size>;
 pub type ReadFunc = fn(Fd, &mut [u8]) -> FdtabResult<Size>;
 pub type CloseFunc = fn(Fd) -> FdtabResult<()>;
 pub type LseekFunc = fn(Fd, u32) -> FdtabResult<()>;
 pub type Lseek64Func = fn(Fd, i64, i32) -> FdtabResult<i64>;
 pub type StatFunc = fn(Fd) -> FdtabResult<Stat>;
+pub type PathStatFunc = fn(&str) -> FdtabResult<Stat>;
 pub type ReadDirFunc = fn(&str) -> FdtabResult<Vec<DirEntry>>;
 pub type ConnectFunc = fn(SocketAddrV4) -> FdtabResult<Fd>;
 pub type BindFunc = fn(SocketAddrV4) -> FdtabResult<Fd>;

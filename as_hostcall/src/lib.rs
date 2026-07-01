@@ -45,6 +45,10 @@ pub enum CommonHostCall {
     Read,
     #[display(fmt = "open")]
     Open,
+    #[display(fmt = "open_dir")]
+    OpenDir,
+    #[display(fmt = "getdents")]
+    GetDents,
     #[display(fmt = "close")]
     Close,
     #[display(fmt = "lseek")]
@@ -53,7 +57,9 @@ pub enum CommonHostCall {
     Lseek64,
     #[display(fmt = "stat")]
     Stat,
-    #[display(fmt = "readdir")]
+    #[display(fmt = "path_stat")]
+    PathStat,
+    #[display(fmt = "read_dir")]
     ReadDir,
     #[display(fmt = "connect")]
     Connect,
@@ -81,6 +87,10 @@ pub enum CommonHostCall {
     FatfsSeek64,
     #[display(fmt = "fatfs_stat")]
     FatfsStat,
+    #[display(fmt = "fatfs_path_stat")]
+    FatfsPathStat,
+    #[display(fmt = "fatfs_readdir")]
+    FatfsReadDir,
 
     #[display(fmt = "addrinfo")]
     SmoltcpAddrInfo,
@@ -153,11 +163,14 @@ impl HostCallID {
 
                 CommonHostCall::Write
                 | CommonHostCall::Open
+                | CommonHostCall::OpenDir
+                | CommonHostCall::GetDents
                 | CommonHostCall::Read
                 | CommonHostCall::Close
                 | CommonHostCall::Lseek
                 | CommonHostCall::Lseek64
                 | CommonHostCall::Stat
+                | CommonHostCall::PathStat
                 | CommonHostCall::ReadDir
                 | CommonHostCall::Connect
                 | CommonHostCall::Socket
@@ -172,7 +185,9 @@ impl HostCallID {
                 | CommonHostCall::FatfsClose
                 | CommonHostCall::FatfsSeek
                 | CommonHostCall::FatfsSeek64
-                | CommonHostCall::FatfsStat => "fatfs".to_owned(),
+                | CommonHostCall::FatfsStat
+                | CommonHostCall::FatfsPathStat
+                | CommonHostCall::FatfsReadDir => "fatfs".to_owned(),
 
                 CommonHostCall::SmoltcpAddrInfo
                 | CommonHostCall::SmoltcpConnect
