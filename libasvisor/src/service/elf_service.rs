@@ -14,11 +14,11 @@ use anyhow::anyhow;
 use lazy_static::lazy_static;
 use libloading::{Library, Symbol};
 
-use log::info;
 use as_hostcall::{
     types::{DropHandlerFunc, IsolationID, MetricEvent, ServiceName},
     IsolationContext, SERVICE_HEAP_SIZE, SERVICE_STACK_SIZE,
 };
+use log::info;
 use nix::libc::{PF_KEY, RTLD_DI_LMID};
 use thiserror::Error;
 

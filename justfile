@@ -30,6 +30,8 @@ rust_func func_name:
 libos lib_name:
     cargo build {{ release_flag }} {{ if enable_mpk == "1" { "--features mpk" } else { "" } }} \
         --manifest-path common_service/{{ lib_name }}/Cargo.toml
+    cp common_service/{{ lib_name }}/target/{{profile}}/lib{{ lib_name }}.so \
+        target/{{profile}}/
 
 pass_args:
     just rust_func func_a
@@ -98,6 +100,23 @@ wasm_func func_name:
     
     @-rm target/{{profile}}/lib{{ func_name }}.so
     just symbol_link {{ func_name }}
+
+musl:
+    bash scripts/build_musl.sh
+
+musl_func func_name: musl
+    cargo build {{ release_flag }} {{ mpk_feature_flag }} \
+        --manifest-path user/{{ func_name }}/Cargo.toml
+
+musl_example: asvisor musl
+    just enable_mpk={{enable_mpk}} enable_release={{enable_release}} libos sys
+    just enable_mpk={{enable_mpk}} enable_release={{enable_release}} libos stdio
+    just enable_mpk={{enable_mpk}} enable_release={{enable_release}} libos mm
+    just enable_mpk={{enable_mpk}} enable_release={{enable_release}} libos fdtab
+    just enable_mpk={{enable_mpk}} enable_release={{enable_release}} libos fatfs
+    cargo build {{ release_flag }} {{ mpk_feature_flag }} \
+        --manifest-path user/musl_hello/Cargo.toml
+    target/{{profile}}/asvisor --files isol_config/musl_hello.json
 
 c_wordcount: 
     just wasm_func wasmtime_mapper

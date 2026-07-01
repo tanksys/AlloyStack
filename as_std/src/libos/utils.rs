@@ -9,6 +9,7 @@ pub macro func_type {
     (read) => (as_hostcall::fdtab::ReadFunc),
     (close) => (as_hostcall::fdtab::CloseFunc),
     (lseek) => (as_hostcall::fdtab::LseekFunc),
+    (lseek64) => (as_hostcall::fdtab::Lseek64Func),
     (stat) => (as_hostcall::fdtab::StatFunc),
     (readdir) => (as_hostcall::fdtab::ReadDirFunc),
     (connect) => (as_hostcall::fdtab::ConnectFunc),
@@ -19,6 +20,7 @@ pub macro func_type {
     (fatfs_read) => (as_hostcall::fatfs::FatfsReadFunc),
     (fatfs_close) => (as_hostcall::fatfs::FatfsCloseFunc),
     (fatfs_seek) => (as_hostcall::fatfs::FatfsSeekFunc),
+    (fatfs_seek64) => (as_hostcall::fatfs::FatfsSeek64Func),
     (fatfs_stat) => (as_hostcall::fatfs::FatfsStatFunc),
     (stdout) => (as_hostcall::types::HostStdioFunc),
     (addrinfo) => (as_hostcall::socket::SmoltcpAddrInfoFunc),
@@ -39,6 +41,9 @@ pub macro func_type {
     (get_time) => (as_hostcall::types::GetTimeFunc),
     (nanosleep) => (as_hostcall::types::NanoSleepFunc),
     (sigaction) => (as_hostcall::signal::SigActionFunc),
+    (futex) => (as_hostcall::sys::FutexFunc),
+    (gettid) => (as_hostcall::sys::GetTidFunc),
+    (getrandom) => (as_hostcall::sys::GetRandomFunc),
 }
 
 pub macro hostcall_id {
@@ -50,6 +55,7 @@ pub macro hostcall_id {
     (read) => (as_hostcall::CommonHostCall::Read),
     (close) => (as_hostcall::CommonHostCall::Close),
     (lseek) => (as_hostcall::CommonHostCall::Lseek),
+    (lseek64) => (as_hostcall::CommonHostCall::Lseek64),
     (stat) => (as_hostcall::CommonHostCall::Stat),
     (readdir) => (as_hostcall::CommonHostCall::ReadDir),
     (connect) => (as_hostcall::CommonHostCall::Connect),
@@ -60,6 +66,7 @@ pub macro hostcall_id {
     (fatfs_read) => (as_hostcall::CommonHostCall::FatfsRead),
     (fatfs_close) => (as_hostcall::CommonHostCall::FatfsClose),
     (fatfs_seek) => (as_hostcall::CommonHostCall::FatfsSeek),
+    (fatfs_seek64) => (as_hostcall::CommonHostCall::FatfsSeek64),
     (fatfs_stat) => (as_hostcall::CommonHostCall::FatfsStat),
     (stdout) => (as_hostcall::CommonHostCall::Stdout),
     (addrinfo) => (as_hostcall::CommonHostCall::SmoltcpAddrInfo),
@@ -80,6 +87,9 @@ pub macro hostcall_id {
     (get_time) => (as_hostcall::CommonHostCall::GetTime),
     (nanosleep) => (as_hostcall::CommonHostCall::NanoSleep),
     (sigaction) => (as_hostcall::CommonHostCall::SigAction),
+    (futex) => (as_hostcall::CommonHostCall::Futex),
+    (gettid) => (as_hostcall::CommonHostCall::GetTid),
+    (getrandom) => (as_hostcall::CommonHostCall::GetRandom),
 }
 
 pub macro libos {

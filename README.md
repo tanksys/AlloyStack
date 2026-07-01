@@ -39,6 +39,8 @@ AlloyStack/
 To run a new test application on AlloyStack, user need to develop functions in the `user/` directory. Then, edit the workflow specification files in the `isol_config/` directory to declare how functions compose the workflow, specify dependencies on LibOS modules, and define input parameters for functions. If the workflow involves reading datasets from files, the datasets must also be added to the file system image. Please use the following command to extract the provided image archive, which contains the source code for the Python benchmarks.
 
 For detailed documentation, please refer to [AlloyStack User Guide](./doc/).
+For source-compatible C functions backed by musl, see
+[Running C functions with musl](./doc/musl_functions.md).
 
 ## Evaluation
 ### Cold start latency

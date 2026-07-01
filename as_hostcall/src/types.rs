@@ -41,6 +41,7 @@ bitflags! {
     pub struct OpenFlags: u32 {
        const O_APPEND = 1;
        const O_CREAT = 2;
+       const O_TRUNC = 4;
     }
 
     #[derive(PartialEq, Clone)]
@@ -55,6 +56,7 @@ pub type Size = usize;
 
 // time for stat
 #[derive(Debug)]
+#[repr(C)]
 pub struct TimeSpec {
     /// Whole seconds part of the timespec.
     pub tv_sec: core::ffi::c_longlong,
@@ -64,6 +66,7 @@ pub struct TimeSpec {
 
 // file stat
 #[derive(Debug)]
+#[repr(C)]
 pub struct Stat {
     // pub st_size: Size,
     /// Device identifier.

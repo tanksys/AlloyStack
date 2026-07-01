@@ -7,6 +7,7 @@ members = [
     "as_hostcall",
     "as_std_proc_macro",
     "as_std",
+    "as_musl",
     "wasmtime_wasi_api",
 ]
 

@@ -49,6 +49,24 @@ pub fn fatfs_seek(fd: Fd, pos: u32) -> FatfsResult<()> {
 }
 
 #[no_mangle]
+pub fn fatfs_seek64(fd: Fd, offset: i64, whence: i32) -> FatfsResult<i64> {
+    let mut table = FTABLE
+        .lock()
+        .map_err(|e| FatfsError::AcquireLockErr(e.to_string()))?;
+
+    let file = table.get_file_mut(fd).ok_or(FatfsError::BadInputFd(fd))?;
+    let from = match whence {
+        0 if offset >= 0 => std::io::SeekFrom::Start(offset as u64),
+        1 => std::io::SeekFrom::Current(offset),
+        2 => std::io::SeekFrom::End(offset),
+        _ => return Err(FatfsError::Unknown),
+    };
+    file.seek(from)
+        .map(|pos| pos as i64)
+        .map_err(|e| FatfsError::HostIOErr(e.to_string()))
+}
+
+#[no_mangle]
 pub fn fatfs_stat(fd: Fd) -> FatfsResult<Stat> {
     let mut table = FTABLE
         .lock()
@@ -95,12 +113,16 @@ pub fn fatfs_open(p: &str, flags: OpenFlags) -> FatfsResult<Fd> {
 
     let root_dir = get_fs_ref().root_dir();
 
-    let file = if flags.contains(OpenFlags::O_CREAT) {
+    let mut file = if flags.contains(OpenFlags::O_CREAT) {
         root_dir.create_file(p)
     } else {
         root_dir.open_file(p)
     }
     .map_err(|_e| FatfsError::Unknown)?;
+
+    if flags.contains(OpenFlags::O_TRUNC) {
+        file.truncate().map_err(|_| FatfsError::Unknown)?;
+    }
 
     let fd = {
         let file = ManuallyDrop::new(Box::new(file));

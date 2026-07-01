@@ -1,0 +1,16 @@
+[package]
+name = "as_musl"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+test = false
+doctest = false
+
+[dependencies]
+as_std = { path = "../as_std", features = ["alloc_def", "panic_def"] }
+as_hostcall = { path = "../as_hostcall", features = ["fdtab", "mm", "sys"] }
+
+[features]
+default = []
+mpk = ["as_std/mpk", "as_hostcall/enable_mpk"]

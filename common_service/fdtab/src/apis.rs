@@ -73,6 +73,26 @@ pub fn lseek(fd: Fd, pos: u32) -> FdtabResult<()> {
 }
 
 #[no_mangle]
+pub fn lseek64(fd: Fd, offset: i64, whence: i32) -> FdtabResult<i64> {
+    if let 0..=2 = fd {
+        Err(FdtabError::BadInputFd(">2".to_owned(), fd))?
+    }
+
+    FD_TABLE.with_file(fd, |file| -> FdtabResult<i64> {
+        let file = file.ok_or(FdtabError::NoExistFd(fd))?;
+
+        match file.src {
+            DataSource::FatFS(raw_fd) => Ok(libos!(fatfs_seek64(raw_fd, offset, whence))?),
+            DataSource::Net(_) => Err(FdtabError::UndefinedOperation {
+                op: "lseek64".to_owned(),
+                fd,
+                fd_type: "Net".to_owned(),
+            }),
+        }
+    })
+}
+
+#[no_mangle]
 pub fn stat(fd: Fd) -> FdtabResult<Stat> {
     if let 0..=2 = fd {
         Err(FdtabError::BadInputFd(">2".to_owned(), fd))?

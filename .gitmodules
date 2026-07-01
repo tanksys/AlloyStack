@@ -1,3 +1,6 @@
 [submodule "nom-uri"]
 	path = nom-uri
 	url = https://github.com/Skasselbard/nom-uri.git
+[submodule "third_party/musl"]
+	path = third_party/musl
+	url = https://git.musl-libc.org/git/musl

@@ -20,6 +20,8 @@ pub mod mpk;
 pub mod signal;
 #[cfg(feature = "socket")]
 pub mod socket;
+#[cfg(feature = "sys")]
+pub mod sys;
 pub mod types;
 
 use alloc::{borrow::ToOwned, string::String};
@@ -47,6 +49,8 @@ pub enum CommonHostCall {
     Close,
     #[display(fmt = "lseek")]
     Lseek,
+    #[display(fmt = "lseek64")]
+    Lseek64,
     #[display(fmt = "stat")]
     Stat,
     #[display(fmt = "readdir")]
@@ -73,6 +77,8 @@ pub enum CommonHostCall {
     FatfsClose,
     #[display(fmt = "fatfs_seek")]
     FatfsSeek,
+    #[display(fmt = "fatfs_seek64")]
+    FatfsSeek64,
     #[display(fmt = "fatfs_stat")]
     FatfsStat,
 
@@ -118,6 +124,13 @@ pub enum CommonHostCall {
 
     #[display(fmt = "libos_sigaction")]
     SigAction,
+
+    #[display(fmt = "host_futex")]
+    Futex,
+    #[display(fmt = "host_gettid")]
+    GetTid,
+    #[display(fmt = "host_getrandom")]
+    GetRandom,
 }
 
 #[derive(Debug, Display)]
@@ -139,6 +152,7 @@ impl HostCallID {
                 | CommonHostCall::Read
                 | CommonHostCall::Close
                 | CommonHostCall::Lseek
+                | CommonHostCall::Lseek64
                 | CommonHostCall::Stat
                 | CommonHostCall::ReadDir
                 | CommonHostCall::Connect
@@ -153,6 +167,7 @@ impl HostCallID {
                 | CommonHostCall::FatfsRead
                 | CommonHostCall::FatfsClose
                 | CommonHostCall::FatfsSeek
+                | CommonHostCall::FatfsSeek64
                 | CommonHostCall::FatfsStat => "fatfs".to_owned(),
 
                 CommonHostCall::SmoltcpAddrInfo
@@ -177,6 +192,10 @@ impl HostCallID {
                 CommonHostCall::SigAction => "signal".to_owned(),
 
                 CommonHostCall::GetTime | CommonHostCall::NanoSleep => "time".to_owned(),
+
+                CommonHostCall::Futex | CommonHostCall::GetTid | CommonHostCall::GetRandom => {
+                    "sys".to_owned()
+                }
             },
             HostCallID::Custom(_) => todo!(),
         }

@@ -8,6 +8,7 @@ pub type FatfsWriteFunc = fn(Fd, &[u8]) -> FatfsResult<Size>;
 pub type FatfsReadFunc = fn(Fd, &mut [u8]) -> FatfsResult<Size>;
 pub type FatfsCloseFunc = fn(Fd) -> FatfsResult<()>;
 pub type FatfsSeekFunc = fn(Fd, u32) -> FatfsResult<()>;
+pub type FatfsSeek64Func = fn(Fd, i64, i32) -> FatfsResult<i64>;
 pub type FatfsStatFunc = fn(Fd) -> FatfsResult<Stat>;
 
 pub type FatfsResult<T> = Result<T, FatfsError>;
