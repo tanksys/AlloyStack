@@ -118,6 +118,52 @@ musl_example: asvisor musl
         --manifest-path user/musl_hello/Cargo.toml
     target/{{profile}}/asvisor --files isol_config/musl_hello.json
 
+musl_wordcount: musl
+    cargo build {{ release_flag }} {{ mpk_feature_flag }} --manifest-path user/musl_mapper/Cargo.toml
+    cargo build {{ release_flag }} {{ mpk_feature_flag }} --manifest-path user/musl_reducer/Cargo.toml
+
+musl_parallel_sort: musl
+    cargo build {{ release_flag }} {{ mpk_feature_flag }} --manifest-path user/musl_sorter/Cargo.toml
+    cargo build {{ release_flag }} {{ mpk_feature_flag }} --manifest-path user/musl_splitter/Cargo.toml
+    cargo build {{ release_flag }} {{ mpk_feature_flag }} --manifest-path user/musl_merger/Cargo.toml
+    cargo build {{ release_flag }} {{ mpk_feature_flag }} --manifest-path user/musl_checker/Cargo.toml
+
+musl_long_chain: musl
+    cargo build {{ release_flag }} {{ mpk_feature_flag }} --manifest-path user/musl_longchain/Cargo.toml
+
+all_musl_c: musl_wordcount musl_parallel_sort musl_long_chain
+
+musl_c_end_to_end_latency: asvisor all_libos all_c_wasm all_musl_c
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    run_case() {
+        local workload="$1"
+        local backend="$2"
+        local config="$3"
+        local output
+        local metric
+
+        if ! output=$(target/{{profile}}/asvisor --files "$config" --metrics total-dur 2>&1); then
+            echo "$output" >&2
+            return 1
+        fi
+        if ! metric=$(printf '%s\n' "$output" | grep -m1 '"total_dur(ms)"'); then
+            echo "$output" >&2
+            echo "missing total_dur metric for $workload ($backend)" >&2
+            return 1
+        fi
+        printf '%-16s %-8s %s\n' "$workload" "$backend" "$metric"
+    }
+
+    printf '%-16s %-8s %s\n' 'workload' 'backend' 'metric'
+    run_case wordcount wasmtime isol_config/wasmtime_wordcount_c3.json
+    run_case wordcount musl isol_config/musl_wordcount_c3.json
+    run_case parallel-sort wasmtime isol_config/wasmtime_parallel_sort_c3.json
+    run_case parallel-sort musl isol_config/musl_parallel_sort_c3.json
+    run_case longchain wasmtime isol_config/wasmtime_longchain.json
+    run_case longchain musl isol_config/musl_longchain.json
+
 c_wordcount: 
     just wasm_func wasmtime_mapper
     just wasm_func wasmtime_reducer

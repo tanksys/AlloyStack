@@ -1,0 +1,15 @@
+[package]
+name = "musl_splitter"
+version = "0.1.0"
+edition = "2021"
+build = "../../build_musl_user.rs"
+
+[lib]
+crate-type = ["dylib"]
+
+[dependencies]
+as_musl = { path = "../../as_musl" }
+
+[features]
+default = []
+mpk = ["as_musl/mpk"]

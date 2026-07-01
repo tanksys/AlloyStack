@@ -55,6 +55,8 @@ pub struct UserHostCall {
     smoltcp_close_addr: Option<usize>,
 
     alloc_buffer_addr: Option<usize>,
+    alloc_buffer_raw_addr: Option<usize>,
+    register_buffer_addr: Option<usize>,
     access_buffer_addr: Option<usize>,
     dealloc_buffer_addr: Option<usize>,
     mmap_addr: Option<usize>,
@@ -120,6 +122,8 @@ impl UserHostCall {
             CommonHostCall::SmoltcpClose => &mut self.smoltcp_close_addr,
 
             CommonHostCall::BufferAlloc => &mut self.alloc_buffer_addr,
+            CommonHostCall::BufferAllocRaw => &mut self.alloc_buffer_raw_addr,
+            CommonHostCall::BufferRegister => &mut self.register_buffer_addr,
             CommonHostCall::AccessBuffer => &mut self.access_buffer_addr,
             CommonHostCall::BufferDealloc => &mut self.dealloc_buffer_addr,
             CommonHostCall::Mmap => &mut self.mmap_addr,

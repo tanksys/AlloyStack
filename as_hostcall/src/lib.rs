@@ -99,6 +99,10 @@ pub enum CommonHostCall {
 
     #[display(fmt = "buffer_alloc")]
     BufferAlloc,
+    #[display(fmt = "buffer_alloc_raw")]
+    BufferAllocRaw,
+    #[display(fmt = "buffer_register")]
+    BufferRegister,
     #[display(fmt = "access_buffer")]
     AccessBuffer,
     #[display(fmt = "buffer_dealloc")]
@@ -179,6 +183,8 @@ impl HostCallID {
                 | CommonHostCall::SmoltcpClose => "socket".to_owned(),
 
                 CommonHostCall::BufferAlloc
+                | CommonHostCall::BufferAllocRaw
+                | CommonHostCall::BufferRegister
                 | CommonHostCall::AccessBuffer
                 | CommonHostCall::BufferDealloc
                 | CommonHostCall::Mmap

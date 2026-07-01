@@ -4,10 +4,13 @@ use core::{alloc::Layout, ptr::NonNull};
 
 use alloc::{borrow::ToOwned, string::String};
 
+use as_hostcall::{
+    mm::{MMError, MMResult},
+    SERVICE_HEAP_SIZE,
+};
 use linked_list_allocator::LockedHeap;
-use as_hostcall::{mm::MMResult, SERVICE_HEAP_SIZE};
 
-use hashbrown::HashMap;
+use hashbrown::{hash_map::Entry, HashMap};
 use lazy_static::lazy_static;
 use spin::Mutex;
 
@@ -22,20 +25,34 @@ lazy_static! {
 }
 
 #[no_mangle]
-pub fn buffer_alloc(slot: &str, l: Layout, fingerprint: u64) -> MMResult<usize> {
+pub fn buffer_alloc_raw(l: Layout) -> MMResult<usize> {
     let addr = BUFFER_ALLOCATOR
         .lock()
         .allocate_first_fit(l)
-        .expect("alloc mem failed");
-    
-    let addr = addr.as_ptr() as usize;
+        .map_err(|_| MMError::NoMemory)?;
 
-    BUFFER_REGISTER
-        .lock()
-        .insert(slot.to_owned(), (addr, fingerprint));
+    Ok(addr.as_ptr() as usize)
+}
 
-    // as_std::println!("buffer_alloc layout={:?}, addr=0x{:x}", l, addr);
+#[no_mangle]
+pub fn buffer_register(slot: &str, addr: usize, fingerprint: u64) -> MMResult<()> {
+    let mut register = BUFFER_REGISTER.lock();
+    match register.entry(slot.to_owned()) {
+        Entry::Vacant(entry) => {
+            entry.insert((addr, fingerprint));
+            Ok(())
+        }
+        Entry::Occupied(_) => Err(MMError::BufferSlotExists),
+    }
+}
 
+#[no_mangle]
+pub fn buffer_alloc(slot: &str, l: Layout, fingerprint: u64) -> MMResult<usize> {
+    let addr = buffer_alloc_raw(l)?;
+    if let Err(error) = buffer_register(slot, addr, fingerprint) {
+        buffer_dealloc(addr, l);
+        return Err(error);
+    }
     Ok(addr)
 }
 

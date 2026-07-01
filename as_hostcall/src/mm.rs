@@ -16,6 +16,8 @@ bitflags! {
 }
 
 pub type BufferAllocFunc = fn(&str, Layout, u64) -> MMResult<usize>;
+pub type BufferAllocRawFunc = fn(Layout) -> MMResult<usize>;
+pub type BufferRegisterFunc = fn(&str, usize, u64) -> MMResult<()>;
 pub type AccessBufferFunc = fn(&str) -> Option<(usize, u64)>;
 pub type BufferDeallocFunc = fn(usize, Layout);
 pub type MemmapFunc = fn(usize, usize, ProtFlags, Fd) -> MMResult<usize>;
@@ -34,4 +36,8 @@ pub enum MMError {
     FileBackendErr(#[from] MmapFileErr),
     #[error("libc api error: {0}")]
     LibcErr(String),
+    #[error("buffer allocation failed")]
+    NoMemory,
+    #[error("buffer slot already exists")]
+    BufferSlotExists,
 }

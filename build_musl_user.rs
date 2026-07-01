@@ -16,6 +16,8 @@ fn main() {
     let repo_root = crate_dir.parent().unwrap().parent().unwrap();
     let out_dir = PathBuf::from(env::var_os("OUT_DIR").unwrap());
     let musl_dir = repo_root.join("target/musl-alloy");
+    let alloy_include = repo_root.join("as_musl/include");
+    let workload_include = repo_root.join("user/musl_parallel_common");
     let musl_lib = musl_dir.join("lib/libmusl_alloy.a");
     let source = crate_dir.join("function.c");
 
@@ -52,6 +54,10 @@ fn main() {
         .arg(musl_dir.join("include"))
         .arg("-isystem")
         .arg(gcc_include)
+        .arg("-I")
+        .arg(&alloy_include)
+        .arg("-I")
+        .arg(&workload_include)
         .arg("-Dmain=alloy_c_main")
         .arg("-c")
         .arg(&source)
@@ -63,6 +69,8 @@ fn main() {
     run(Command::new(ar).arg("rcs").arg(&app_archive).arg(&object));
 
     println!("cargo:rerun-if-changed={}", source.display());
+    println!("cargo:rerun-if-changed={}", alloy_include.display());
+    println!("cargo:rerun-if-changed={}", workload_include.display());
     println!("cargo:rerun-if-changed={}", musl_lib.display());
     println!("cargo:rustc-link-search=native={}", out_dir.display());
     println!(
