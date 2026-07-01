@@ -134,8 +134,10 @@ musl_long_chain: musl
 musl_cpython: musl
     bash scripts/build_cpython_musl.sh
     cargo build {{ release_flag }} {{ mpk_feature_flag }} --manifest-path user/musl_cpython/Cargo.toml
+    for id in 0 1 2 3 4; do cp -L target/{{profile}}/libmusl_cpython.so target/{{profile}}/libmusl_cpython_${id}.so; done
 
 all_musl_c: musl_wordcount musl_parallel_sort musl_long_chain
+all_py_musl: musl_cpython
 
 musl_c_end_to_end_latency: asvisor all_libos all_c_wasm all_musl_c
     #!/usr/bin/env bash
@@ -167,6 +169,46 @@ musl_c_end_to_end_latency: asvisor all_libos all_c_wasm all_musl_c
     run_case parallel-sort musl isol_config/musl_parallel_sort_c3.json
     run_case longchain wasmtime isol_config/wasmtime_longchain.json
     run_case longchain musl isol_config/musl_longchain.json
+
+musl_py_end_to_end_latency: asvisor all_libos all_py_musl
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    for case in \
+        "wordcount:isol_config/musl_cpython_wordcount_c1.json" \
+        "parallel-sort:isol_config/musl_cpython_parallel_sort_c1.json" \
+        "function-chain:isol_config/musl_cpython_functionchain_n5.json"
+    do
+        workload="${case%%:*}"
+        config="${case#*:}"
+        output=$(target/{{profile}}/asvisor --files "$config" --metrics total-dur 2>&1)
+        metric=$(printf '%s\n' "$output" | grep -m1 '"total_dur(ms)"')
+        printf '%-16s %s\n' "$workload" "$metric"
+    done
+
+py_end_to_end_latency_compare: asvisor all_libos all_py_wasm all_py_musl
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    run_case() {
+        local workload="$1"
+        local backend="$2"
+        local config="$3"
+        local output
+        local metric
+
+        output=$(target/{{profile}}/asvisor --files "$config" --metrics total-dur 2>&1)
+        metric=$(printf '%s\n' "$output" | grep -m1 '"total_dur(ms)"')
+        printf '%-16s %-8s %s\n' "$workload" "$backend" "$metric"
+    }
+
+    printf '%-16s %-8s %s\n' 'workload' 'backend' 'metric'
+    run_case wordcount wasmtime isol_config/wasmtime_cpython_wordcount_c1.json
+    run_case wordcount musl isol_config/musl_cpython_wordcount_c1.json
+    run_case parallel-sort wasmtime isol_config/wasmtime_cpython_parallel_sort_c1.json
+    run_case parallel-sort musl isol_config/musl_cpython_parallel_sort_c1.json
+    run_case function-chain wasmtime isol_config/wasmtime_cpython_functionchain_n5.json
+    run_case function-chain musl isol_config/musl_cpython_functionchain_n5.json
 
 c_wordcount: 
     just wasm_func wasmtime_mapper
@@ -269,19 +311,35 @@ c_end_to_end_latency: asvisor all_libos all_c_wasm
     target/{{profile}}/asvisor --files isol_config/wasmtime_longchain.json --metrics total-dur 2>&1 | grep 'total_dur'
 
 py_end_to_end_latency: asvisor all_libos all_py_wasm
-    # Python applications.
-    -sudo mount fs_images/fatfs.img image_content 2>/dev/null
-    sudo -E ./scripts/gen_data.py 1 '1 * 1024 * 1024' 1 '1 * 1024 * 1024'
+    #!/usr/bin/env bash
+    set -euo pipefail
 
+    sudo mount fs_images/fatfs.img image_content 2>/dev/null || true
+    sudo -E ./scripts/gen_data.py 1 '1 * 1024 * 1024' 1 '1 * 1024 * 1024'
     sleep 5
-    @echo 'Python word count cost: '
-    target/{{profile}}/asvisor --files isol_config/wasmtime_cpython_wordcount_c1.json --metrics total-dur 2>&1 | grep 'total_dur'
-    
-    @echo 'Python parallel sorting cost: '
-    target/{{profile}}/asvisor --files isol_config/wasmtime_cpython_parallel_sort_c1.json --metrics total-dur 2>&1 | grep 'total_dur'
-    
-    @echo 'Python long chain cost: '
-    target/{{profile}}/asvisor --files isol_config/wasmtime_cpython_functionchain_n5.json --metrics total-dur 2>&1 | grep 'total_dur'
+
+    run_case() {
+        local label="$1"
+        local config="$2"
+        local output
+        local metric
+
+        echo "$label"
+        if ! output=$(target/{{profile}}/asvisor --files "$config" --metrics total-dur 2>&1); then
+            echo "$output" >&2
+            return 1
+        fi
+        if ! metric=$(printf '%s\n' "$output" | grep -m1 '"total_dur(ms)"'); then
+            echo "$output" >&2
+            echo "missing total_dur metric for $config" >&2
+            return 1
+        fi
+        echo "$metric"
+    }
+
+    run_case 'Python word count cost:' isol_config/wasmtime_cpython_wordcount_c1.json
+    run_case 'Python parallel sorting cost:' isol_config/wasmtime_cpython_parallel_sort_c1.json
+    run_case 'Python long chain cost:' isol_config/wasmtime_cpython_functionchain_n5.json
 
 breakdown: asvisor all_libos
     -sudo mount fs_images/fatfs.img image_content 2>/dev/null

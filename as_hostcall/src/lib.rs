@@ -59,7 +59,7 @@ pub enum CommonHostCall {
     Stat,
     #[display(fmt = "path_stat")]
     PathStat,
-    #[display(fmt = "read_dir")]
+    #[display(fmt = "readdir")]
     ReadDir,
     #[display(fmt = "connect")]
     Connect,
@@ -115,6 +115,8 @@ pub enum CommonHostCall {
     BufferRegister,
     #[display(fmt = "access_buffer")]
     AccessBuffer,
+    #[display(fmt = "borrow_buffer")]
+    BorrowBuffer,
     #[display(fmt = "buffer_dealloc")]
     BufferDealloc,
     #[display(fmt = "libos_mmap")]
@@ -201,6 +203,7 @@ impl HostCallID {
                 | CommonHostCall::BufferAllocRaw
                 | CommonHostCall::BufferRegister
                 | CommonHostCall::AccessBuffer
+                | CommonHostCall::BorrowBuffer
                 | CommonHostCall::BufferDealloc
                 | CommonHostCall::Mmap
                 | CommonHostCall::Munmap

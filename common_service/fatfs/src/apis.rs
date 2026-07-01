@@ -136,6 +136,11 @@ fn make_stat(size: Size, mode: u32) -> Stat {
 
 #[no_mangle]
 pub fn fatfs_path_stat(path: &str) -> FatfsResult<Stat> {
+    // fatfs::FileSystem uses RefCell for the underlying disk. Serialize
+    // metadata operations with open/read/write operations in FTABLE.
+    let _table = FTABLE
+        .lock()
+        .map_err(|e| FatfsError::AcquireLockErr(e.to_string()))?;
     let root = get_fs_ref().root_dir();
     let path = path.trim_start_matches('/');
 
@@ -152,6 +157,9 @@ pub fn fatfs_path_stat(path: &str) -> FatfsResult<Stat> {
 
 #[no_mangle]
 pub fn fatfs_readdir(path: &str, buffer: &mut [u8]) -> FatfsResult<Size> {
+    let _table = FTABLE
+        .lock()
+        .map_err(|e| FatfsError::AcquireLockErr(e.to_string()))?;
     let path = path.trim_start_matches('/');
     let dir = get_fs_ref()
         .root_dir()

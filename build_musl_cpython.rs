@@ -66,6 +66,8 @@ fn main() {
         .arg("-D_POSIX_C_SOURCE=200809L")
         .arg("-isystem")
         .arg(musl_dir.join("include"))
+        .arg("-I")
+        .arg(repo_root.join("as_musl/include"))
         .arg("-isystem")
         .arg(&python_config_include)
         .arg("-isystem")
