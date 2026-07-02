@@ -263,39 +263,6 @@ pub unsafe extern "C" fn as_buffer_take(slot: *const c_char, out: *mut AsBuffer)
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn as_buffer_borrow(slot: *const c_char, out: *mut AsBuffer) -> i32 {
-    if out.is_null() {
-        return -EINVAL as i32;
-    }
-    ptr::write(out, AsBuffer::empty());
-    let slot = match buffer_slot(slot) {
-        Ok(slot) => slot,
-        Err(error) => return error,
-    };
-    let (allocation, fingerprint) = match libos!(borrow_buffer(slot)) {
-        Some(metadata) => metadata,
-        None => return -ENOENT as i32,
-    };
-    if fingerprint != AS_BUFFER_FINGERPRINT {
-        return -EPROTO;
-    }
-    let header = allocation as *mut AsBufferHeader;
-    if (*header).magic != AS_BUFFER_MAGIC || (*header).len > (*header).capacity {
-        return -EPROTO;
-    }
-    ptr::write(
-        out,
-        AsBuffer {
-            data: header.add(1) as *mut c_void,
-            len: (*header).len,
-            capacity: (*header).capacity,
-            allocation,
-        },
-    );
-    0
-}
-
-#[no_mangle]
 pub unsafe extern "C" fn as_buffer_release(buffer: *mut AsBuffer) -> i32 {
     let header = match checked_header(buffer) {
         Ok(header) => header,

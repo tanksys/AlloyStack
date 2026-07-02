@@ -72,7 +72,7 @@ static PyObject *pyas_access_buffer(PyObject *self, PyObject *args)
     if (PyObject_GetBuffer(target, &target_view, PyBUF_WRITABLE) < 0)
         return NULL;
 
-    error = as_buffer_borrow(slot, &source);
+    error = as_buffer_take(slot, &source);
     if (error == -ENOENT) {
         memset(target_view.buf, 0, (size_t)target_view.len);
         PyBuffer_Release(&target_view);
@@ -83,10 +83,18 @@ static PyObject *pyas_access_buffer(PyObject *self, PyObject *args)
         return pyas_error("as_buffer_take", error);
     }
     if ((size_t)target_view.len < source.len) {
+        size_t required = source.len;
+        Py_ssize_t available = target_view.len;
+        error = as_buffer_publish(slot, &source, required);
         PyBuffer_Release(&target_view);
+        if (error) {
+            if (source.data)
+                as_buffer_release(&source);
+            return pyas_error("as_buffer_publish", error);
+        }
         PyErr_Format(PyExc_ValueError,
                      "target buffer is too small: need %zu, got %zd",
-                     source.len, target_view.len);
+                     required, available);
         return NULL;
     }
 
@@ -95,34 +103,50 @@ static PyObject *pyas_access_buffer(PyObject *self, PyObject *args)
         memset((char *)target_view.buf + source.len, 0,
                (size_t)target_view.len - source.len);
     PyBuffer_Release(&target_view);
+    error = as_buffer_publish(slot, &source, source.len);
+    if (error) {
+        if (source.data)
+            as_buffer_release(&source);
+        return pyas_error("as_buffer_publish", error);
+    }
     Py_RETURN_NONE;
 }
 
-static PyObject *pyas_borrow_buffer(PyObject *self, PyObject *args)
+static PyObject *pyas_take_buffer(PyObject *self, PyObject *args)
 {
     const char *slot;
     as_buffer_t source = AS_BUFFER_INIT;
+    PyObject *view;
     int error;
 
     (void)self;
-    if (!PyArg_ParseTuple(args, "s:borrow_buffer", &slot))
+    if (!PyArg_ParseTuple(args, "s:take_buffer", &slot))
         return NULL;
-    error = as_buffer_borrow(slot, &source);
+    error = as_buffer_take(slot, &source);
     if (error == -ENOENT)
         Py_RETURN_NONE;
     if (error)
-        return pyas_error("as_buffer_borrow", error);
-    return PyMemoryView_FromMemory((char *)source.data,
-                                   (Py_ssize_t)source.len, PyBUF_READ);
+        return pyas_error("as_buffer_take", error);
+    view = PyMemoryView_FromMemory((char *)source.data,
+                                  (Py_ssize_t)source.len, PyBUF_READ);
+    if (!view) {
+        error = as_buffer_publish(slot, &source, source.len);
+        if (error) {
+            if (source.data)
+                as_buffer_release(&source);
+            return pyas_error("as_buffer_publish", error);
+        }
+    }
+    return view;
 }
 
 static PyMethodDef pyas_methods[] = {
     {"buffer_register", pyas_buffer_register, METH_VARARGS,
      "Allocate and publish a writable shared buffer."},
     {"access_buffer", pyas_access_buffer, METH_VARARGS,
-     "Borrow a shared buffer and copy it into a writable Python buffer."},
-    {"borrow_buffer", pyas_borrow_buffer, METH_VARARGS,
-     "Return a zero-copy, read-only view of a shared buffer."},
+     "Copy a shared buffer into a writable Python buffer without consuming it."},
+    {"take_buffer", pyas_take_buffer, METH_VARARGS,
+     "Consume a shared buffer and return a zero-copy, read-only view."},
     {NULL, NULL, 0, NULL},
 };
 

@@ -26,8 +26,6 @@ typedef struct as_buffer {
 int as_buffer_alloc(size_t capacity, as_buffer_t *out);
 int as_buffer_publish(const char *slot, as_buffer_t *buffer, size_t len);
 int as_buffer_take(const char *slot, as_buffer_t *out);
-/* borrow is non-owning; callers must not release the returned handle. */
-int as_buffer_borrow(const char *slot, as_buffer_t *out);
 int as_buffer_release(as_buffer_t *buffer);
 
 #ifdef __cplusplus

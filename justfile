@@ -174,6 +174,8 @@ musl_py_end_to_end_latency: asvisor all_libos all_py_musl
     #!/usr/bin/env bash
     set -euo pipefail
 
+    sudo -E ./scripts/sync_python_workloads.sh
+
     for case in \
         "wordcount:isol_config/musl_cpython_wordcount_c1.json" \
         "parallel-sort:isol_config/musl_cpython_parallel_sort_c1.json" \
@@ -189,6 +191,8 @@ musl_py_end_to_end_latency: asvisor all_libos all_py_musl
 py_end_to_end_latency_compare: asvisor all_libos all_py_wasm all_py_musl
     #!/usr/bin/env bash
     set -euo pipefail
+
+    sudo -E ./scripts/sync_python_workloads.sh
 
     run_case() {
         local workload="$1"
@@ -256,6 +260,9 @@ init:
     [ -f fs_images/fatfs.img ] || unzip fs_images/fatfs.zip -d fs_images
     [ -d image_content ] || mkdir image_content
 
+sync_python_workloads:
+    ./scripts/sync_python_workloads.sh
+
 asvisor:
     cargo build {{ release_flag }}
 
@@ -315,6 +322,7 @@ py_end_to_end_latency: asvisor all_libos all_py_wasm
     set -euo pipefail
 
     sudo mount fs_images/fatfs.img image_content 2>/dev/null || true
+    sudo -E ./scripts/sync_python_workloads.sh
     sudo -E ./scripts/gen_data.py 1 '1 * 1024 * 1024' 1 '1 * 1024 * 1024'
     sleep 5
 

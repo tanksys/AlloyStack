@@ -67,11 +67,6 @@ pub fn access_buffer(slot: &str) -> Option<(usize, u64)> {
 }
 
 #[no_mangle]
-pub fn borrow_buffer(slot: &str) -> Option<(usize, u64)> {
-    BUFFER_REGISTER.lock().get(slot).copied()
-}
-
-#[no_mangle]
 pub fn buffer_dealloc(addr: usize, l: Layout) {
     unsafe {
         BUFFER_ALLOCATOR
