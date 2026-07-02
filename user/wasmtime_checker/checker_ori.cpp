@@ -54,16 +54,14 @@ int main(int argc, char* argv[]) {
         }
         free(buffer);
     }
-    // printf("result_array: ");
-    // for (int i = 0; i < index-1; i++) {
-    //     if (result[i] > result[i+1]) {
-    //         printf("sort error!\n");
-    //         return 0;
-    //     }
-    //     printf("%d ", result[i]);
-    // }
-    // printf("%d\n", result[index-1]);
-    // printf("checker_%d all finished!\n", id);
+    for (int i = 0; i + 1 < index; i++) {
+        if (result[i] > result[i + 1]) {
+            fprintf(stderr, "sort error at index %d: %d > %d\n",
+                    i, result[i], result[i + 1]);
+            return 4;
+        }
+    }
+    printf("wasmtime parallel sort checked %d values\n", index);
     get_time();
     return 0;
 }
