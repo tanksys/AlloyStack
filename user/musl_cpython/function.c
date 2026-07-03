@@ -188,16 +188,19 @@ static int configure_argv(PyConfig *config, const char *script,
                           int argc, char **argv)
 {
     const char *id = find_arg(argc, argv, "id");
+    const char *data_size = find_arg(argc, argv, "data_size");
     const char *mapper_num = find_arg(argc, argv, "mapper_num");
     const char *reducer_num = find_arg(argc, argv, "reducer_num");
     const char *sorter_num = find_arg(argc, argv, "sorter_num");
     const char *merger_num = find_arg(argc, argv, "merger_num");
     const char *func_num = find_arg(argc, argv, "func_num");
-    char *python_argv[4];
+    char *python_argv[5];
     Py_ssize_t python_argc = 0;
     PyStatus status;
 
     python_argv[python_argc++] = (char *)(script ? script : "python");
+    if (data_size)
+        python_argv[python_argc++] = (char *)data_size;
     if (func_num) {
         python_argv[python_argc++] = (char *)func_num;
     } else if (sorter_num && merger_num) {

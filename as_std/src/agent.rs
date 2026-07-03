@@ -70,7 +70,10 @@ mod refer_based_impl {
             } else {
                 let fingerprint = T::__fingerprint();
 
-                libos!(buffer_alloc(&slot, l, fingerprint)).expect("alloc failed.") as *mut T
+                libos!(buffer_alloc(&slot, l, fingerprint))
+                    .unwrap_or_else(|error| {
+                        panic!("alloc failed for buffer slot {:?}: {:?}", slot, error)
+                    }) as *mut T
 
                 // let val = T::default();
                 // println!("will write addr=0x{:x}", addr as usize);

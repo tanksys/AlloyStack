@@ -1,0 +1,19 @@
+{
+  "services": [
+    ["sys", "libsys.so"],
+    ["time", "libtime.so"],
+    ["stdio", "libstdio.so"],
+    ["mm", "libmm.so"]
+  ],
+  "apps": [
+    ["trans_data", "libmusl_trans_data.so"]
+  ],
+  "groups": [
+    {
+      "list": ["trans_data"],
+      "args": {
+        "data_size": "4096"
+      }
+    }
+  ]
+}

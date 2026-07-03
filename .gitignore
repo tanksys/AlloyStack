@@ -3,6 +3,10 @@ tinywasm
 venv
 wasmtime-as-lib
 image_content/*
+**/__pycache__/
+*.py[cod]
+reports/latency_report.md
+reports/latency_report_results.json
 
 .VSCodeCounter
 .gdbinit

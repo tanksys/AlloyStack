@@ -1,0 +1,39 @@
+{
+  "unset_cc": true,
+  "prepare": [
+    "./scripts/sync_python_workloads.sh"
+  ],
+  "data_transfer_latency": {
+    "cells": {
+      "4*1024": {
+        "wasm-py": null,
+        "musl-c": null,
+        "musl-py": null
+      },
+      "64*1024": {
+        "wasm-c": null,
+        "wasm-py": null,
+        "musl-c": null,
+        "musl-py": null
+      },
+      "1024*1024": {
+        "wasm-c": null,
+        "wasm-py": null,
+        "musl-c": null,
+        "musl-py": null
+      },
+      "16*1024*1024": {
+        "wasm-c": null,
+        "wasm-py": null,
+        "musl-c": null,
+        "musl-py": null
+      },
+      "256*1024*1024": {
+        "wasm-c": null,
+        "wasm-py": null,
+        "musl-c": null,
+        "musl-py": null
+      }
+    }
+  }
+}

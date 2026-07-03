@@ -131,12 +131,15 @@ musl_parallel_sort: musl
 musl_long_chain: musl
     cargo build {{ release_flag }} {{ mpk_feature_flag }} --manifest-path user/musl_longchain/Cargo.toml
 
+musl_trans_data: musl
+    cargo build {{ release_flag }} {{ mpk_feature_flag }} --manifest-path user/musl_trans_data/Cargo.toml
+
 musl_cpython: musl
     bash scripts/build_cpython_musl.sh
     cargo build {{ release_flag }} {{ mpk_feature_flag }} --manifest-path user/musl_cpython/Cargo.toml
     for id in 0 1 2 3 4; do cp -L target/{{profile}}/libmusl_cpython.so target/{{profile}}/libmusl_cpython_${id}.so; done
 
-all_musl_c: musl_wordcount musl_parallel_sort musl_long_chain
+all_musl_c: musl_wordcount musl_parallel_sort musl_long_chain musl_trans_data
 all_py_musl: musl_cpython
 
 musl_c_end_to_end_latency: asvisor all_libos all_c_wasm all_musl_c
@@ -227,6 +230,9 @@ c_parallel_sort:
 c_long_chain:
     just wasm_func wasmtime_longchain
 
+c_trans_data:
+    bash user/wasmtime_trans_data/build.sh
+
 all_c_wasm: c_wordcount c_parallel_sort c_long_chain
 
 python_wordcount: 
@@ -257,11 +263,59 @@ gen_data:
 init:
     rustup override set 'nightly-2023-12-01'
     rustup target add x86_64-unknown-linux-musl
+    rustup target add x86_64-unknown-none
     [ -f fs_images/fatfs.img ] || unzip fs_images/fatfs.zip -d fs_images
     [ -d image_content ] || mkdir image_content
 
 sync_python_workloads:
     ./scripts/sync_python_workloads.sh
+
+latency_report *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    output="reports/latency_report.md"
+    results="reports/latency_report_results.json"
+    config=""
+    collect="0"
+    clean="0"
+
+    for arg in {{ args }}; do
+        case "$arg" in
+            output=*)
+                output="${arg#output=}"
+                ;;
+            results=*)
+                results="${arg#results=}"
+                ;;
+            config=*)
+                config="${arg#config=}"
+                ;;
+            collect=*)
+                collect="${arg#collect=}"
+                ;;
+            clean=*)
+                clean="${arg#clean=}"
+                ;;
+            *)
+                echo "unknown latency_report argument: $arg" >&2
+                exit 2
+                ;;
+        esac
+    done
+
+    cmd=(python3 scripts/report_latency.py --output "$output" --results "$results")
+    if [[ "$collect" == "1" ]]; then
+        cmd+=(--collect)
+    fi
+    if [[ "$clean" == "1" ]]; then
+        cmd+=(--clean)
+    fi
+    if [[ -n "$config" ]]; then
+        cmd+=(--config "$config")
+    fi
+
+    "${cmd[@]}"
 
 asvisor:
     cargo build {{ release_flag }}

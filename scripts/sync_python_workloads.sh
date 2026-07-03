@@ -5,7 +5,7 @@ repo_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 source_dir="$repo_root/user/python_workloads/wasm_bench"
 image="${FS_IMAGE:-$repo_root/fs_images/fatfs.img}"
 mount_dir="${IMAGE_MOUNT:-$repo_root/image_content}"
-files=(wordcount.py parallel_sort.py functionchain.py)
+files=(wordcount.py parallel_sort.py functionchain.py transfer.py)
 
 if mountpoint -q "$mount_dir"; then
     target_dir="$mount_dir/wasm_bench"
