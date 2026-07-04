@@ -116,7 +116,11 @@ pub type HostStdioFunc = fn(&[u8]) -> Size;
 pub type SockFd = u32;
 
 // time
-pub type GetTimeFunc = fn() -> Result<u128, String>;
+/// Nanoseconds since the Unix epoch. `u64::MAX` reports a clock error.
+///
+/// Keep this hostcall's return value scalar: complex Rust return values use an
+/// indirect ABI that is unsafe across independently loaded LibOS modules.
+pub type GetTimeFunc = extern "C" fn() -> u64;
 pub type NanoSleepFunc = fn(u64, u64);
 
 // isol_info

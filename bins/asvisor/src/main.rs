@@ -1,4 +1,4 @@
-use std::{sync::Arc, thread::sleep, time::Duration};
+use std::{io, sync::Arc, thread::sleep, time::Duration};
 
 use clap::{arg, Parser};
 use derive_more::Display;
@@ -50,6 +50,29 @@ struct Args {
     /// block after workflow execution.
     #[arg(short, long, default_value_t = false)]
     non_exit: bool,
+
+    /// Allow fatal signals to generate a core dump.
+    #[arg(long, default_value_t = false)]
+    enable_core_dump: bool,
+}
+
+fn disable_core_dumps() -> io::Result<()> {
+    let limit = libc::rlimit {
+        rlim_cur: 0,
+        rlim_max: 0,
+    };
+
+    // A piped core_pattern (for example systemd-coredump) may ignore
+    // RLIMIT_CORE. PR_SET_DUMPABLE prevents the dump from being generated at
+    // all, while the limit also covers regular file-based core dumps.
+    if unsafe { libc::prctl(libc::PR_SET_DUMPABLE, 0, 0, 0, 0) } != 0 {
+        return Err(io::Error::last_os_error());
+    }
+    if unsafe { libc::setrlimit(libc::RLIMIT_CORE, &limit) } != 0 {
+        return Err(io::Error::last_os_error());
+    }
+
+    Ok(())
 }
 
 fn build_all_isol(args: &Args) -> Vec<Arc<Isolation>> {
@@ -117,6 +140,9 @@ async fn async_msvisor_start(isols: &[Arc<Isolation>]) {
 fn main() {
     logger::init();
     let args = Args::parse();
+    if !args.enable_core_dump {
+        disable_core_dumps().expect("failed to disable core dumps");
+    }
     let isols = build_all_isol(&args);
 
     #[cfg(feature = "multi_workflow")]

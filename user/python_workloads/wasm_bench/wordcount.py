@@ -2,9 +2,9 @@ import pyas
 import sys
 import time
 
-# buffer_size = 500000
-buffer_size = 25677
+buffer_size = 500000
 flag_size = 2
+length_size = 20
 
 def get_now():
     return time.time()
@@ -13,9 +13,30 @@ def take_data_buffer(slot_name, size):
     take_buffer = getattr(pyas, "take_buffer", None)
     if take_buffer is not None:
         return take_buffer(slot_name)
+    get_buffer_len = getattr(pyas, "buffer_len", None)
+    if get_buffer_len is not None:
+        size = get_buffer_len(slot_name)
+    else:
+        length_buffer = bytearray(length_size)
+        pyas.access_buffer(slot_name + ".len", length_buffer)
+        size = int(bytes(length_buffer).rstrip(b"\x00"))
     buffer = bytearray(size)
     pyas.access_buffer(slot_name, buffer)
     return buffer
+
+def publish_data_buffer(slot_name, encoded_data):
+    buffer = pyas.buffer_register(slot_name, len(encoded_data))
+    buffer[:] = encoded_data
+    setattr(__import__("__main__"), slot_name, buffer)
+    if (
+        getattr(pyas, "buffer_len", None) is None
+        and getattr(pyas, "take_buffer", None) is None
+    ):
+        length_slot = slot_name + ".len"
+        length_buffer = pyas.buffer_register(length_slot, length_size)
+        encoded_len = str(len(encoded_data)).encode()
+        length_buffer[:len(encoded_len)] = encoded_len
+        setattr(__import__("__main__"), length_slot, length_buffer)
 
 def mapper(my_id, reducer_num):
     # print("python: mapper {} start, reducer_num is {}".format(my_id, reducer_num), flush=True)
@@ -50,10 +71,9 @@ def mapper(my_id, reducer_num):
 
     for i, data in enumerate(slot_data):
         slot_name = "buffer_{}_{}".format(my_id, i)
-        setattr(__import__("__main__"), slot_name, pyas.buffer_register(slot_name, buffer_size))
         encoded_data = data.encode()
+        publish_data_buffer(slot_name, encoded_data)
         # print("python: mapper {} pass {} size: {}".format(my_id, slot_name, len(encoded_data)), flush=True) # important
-        getattr(__import__("__main__"), slot_name)[:len(encoded_data)] = encoded_data
     print("compute{}end1: {}".format(my_id, get_now()))
     for i in range(reducer_num):
         slot_name = "flag_{}_{}".format(my_id, i)

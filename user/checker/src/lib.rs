@@ -21,10 +21,7 @@ struct VecArg {
 
 #[no_mangle]
 pub fn main() -> Result<()> {
-    println!(
-        "com_start4: {}",
-        SystemTime::now().duration_since(UNIX_EPOCH).as_micros() as f64 / 1000000f64
-    );
+    print_timestamp("com_start4");
     let merger_num: u32 = {
         let m = args::get("merger_num").unwrap();
         m.parse().unwrap()
@@ -49,10 +46,12 @@ pub fn main() -> Result<()> {
             last_max = *first
         }
     }
-    println!(
-        "com_end4: {}",
-        SystemTime::now().duration_since(UNIX_EPOCH).as_micros() as f64 / 1000000f64
-    );
+    print_timestamp("com_end4");
     println!("sort result is ok, total sort {} numbers", counter);
     Ok(().into())
+}
+
+fn print_timestamp(label: &str) {
+    let micros = SystemTime::now().duration_since(UNIX_EPOCH).as_micros();
+    println!("{}: {}.{:06}", label, micros / 1_000_000, micros % 1_000_000);
 }

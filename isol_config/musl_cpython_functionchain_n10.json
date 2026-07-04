@@ -1,0 +1,23 @@
+{
+  "services": [
+    ["sys", "libsys.so"],
+    ["time", "libtime.so"],
+    ["stdio", "libstdio.so"],
+    ["mm", "libmm.so"],
+    ["fdtab", "libfdtab.so"],
+    ["fatfs", "libfatfs.so"]
+  ],
+  "apps": [
+    ["functionchain", "libmusl_cpython.so"]
+  ],
+  "fs_image": "fs_images/fatfs.img",
+  "groups": [
+    {
+      "list": ["functionchain"],
+      "args": {
+        "pyfile_path": "/wasm_bench/functionchain.py",
+        "func_num": "10"
+      }
+    }
+  ]
+}

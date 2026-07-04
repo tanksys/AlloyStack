@@ -5,6 +5,7 @@ import heapq
 
 buffer_size = 60000000
 flag_size = 2
+length_size = 20
 
 def get_now():
     return time.time()
@@ -13,9 +14,30 @@ def take_data_buffer(slot_name, size):
     take_buffer = getattr(pyas, "take_buffer", None)
     if take_buffer is not None:
         return take_buffer(slot_name)
+    get_buffer_len = getattr(pyas, "buffer_len", None)
+    if get_buffer_len is not None:
+        size = get_buffer_len(slot_name)
+    else:
+        length_buffer = bytearray(length_size)
+        pyas.access_buffer(slot_name + ".len", length_buffer)
+        size = int(bytes(length_buffer).rstrip(b"\x00"))
     buffer = bytearray(size)
     pyas.access_buffer(slot_name, buffer)
     return buffer
+
+def publish_data_buffer(slot_name, encoded_data):
+    buffer = pyas.buffer_register(slot_name, len(encoded_data))
+    buffer[:] = encoded_data
+    setattr(__import__("__main__"), slot_name, buffer)
+    if (
+        getattr(pyas, "buffer_len", None) is None
+        and getattr(pyas, "take_buffer", None) is None
+    ):
+        length_slot = slot_name + ".len"
+        length_buffer = pyas.buffer_register(length_slot, length_size)
+        encoded_len = str(len(encoded_data)).encode()
+        length_buffer[:len(encoded_len)] = encoded_len
+        setattr(__import__("__main__"), length_slot, length_buffer)
 
 setattr(__import__("__main__"), "trans_start_times", 0)
 def get_trans_start_time():
@@ -81,16 +103,14 @@ def sorter(my_id, sorter_num, merger_num):
         pivot = [nums[(i + 1) * len(nums) // merger_num] for i in range(merger_num - 1)]
         for i in range(sorter_num):
             slot_name = "pivot_{}".format(i)
-            setattr(__import__("__main__"), slot_name, pyas.buffer_register(slot_name, buffer_size))
             encoded_data = " ".join(map(str, pivot)).encode()
+            publish_data_buffer(slot_name, encoded_data)
             # print("python: sorter {} pass {} size: {}".format(my_id, slot_name, len(encoded_data)), flush=True) # important
-            getattr(__import__("__main__"), slot_name)[:len(encoded_data)] = encoded_data
 
     slot_name = "sorter_{}".format(my_id)
-    setattr(__import__("__main__"), slot_name, pyas.buffer_register(slot_name, buffer_size))
     encoded_data = " ".join(map(str, nums)).encode()
+    publish_data_buffer(slot_name, encoded_data)
     # print("python: sorter {} pass {} size: {}".format(my_id, slot_name, len(encoded_data)), flush=True) # important
-    getattr(__import__("__main__"), slot_name)[:len(encoded_data)] = encoded_data
     print("compute{}end{}: {}".format(my_id, get_compute_end_time(), get_now()))
 
     # print("python: sorter {} finished!".format(my_id), flush=True)
@@ -146,18 +166,15 @@ def spilter(my_id, sorter_num, merger_num):
     slot_data = [[] for _ in range(merger_num)]
     for num in nums:
         row = 0
-        for i in range(len(pivot)):
-            if num >= pivot[i]:
-                row = i
-                break
+        while row < len(pivot) and num >= pivot[row]:
+            row += 1
         slot_data[row].append(num)
 
     for i in range(merger_num):
         slot_name = "merger_{}_{}".format(my_id, i)
-        setattr(__import__("__main__"), slot_name, pyas.buffer_register(slot_name, buffer_size))
         encoded_data = " ".join(map(str, slot_data[i])).encode()
+        publish_data_buffer(slot_name, encoded_data)
         # print("python: spilter {} pass {} size: {}".format(my_id, slot_name, len(encoded_data)), flush=True) # important
-        getattr(__import__("__main__"), slot_name)[:len(encoded_data)] = encoded_data
     print("compute{}end{}: {}".format(my_id, get_compute_end_time(), get_now()))
     # print("python: spliter {} finished!".format(my_id), flush=True)
 
@@ -190,7 +207,7 @@ def merger(my_id, sorter_num, merger_num):
         # print("python: merger {} pass {} buffer: {}".format(my_id, slot_name, getattr(__import__("__main__"), slot_name)))
 
     print("compute{}start{}: {}".format(my_id, get_compute_start_time(), get_now()))
-    min_heap = []
+    sorted_partitions = []
     for i in range(sorter_num):
         slot_name = "merger_{}_{}".format(i, my_id)
         print("trans{}start{}: {}".format(my_id, get_trans_start_time(), get_now()))
@@ -198,19 +215,14 @@ def merger(my_id, sorter_num, merger_num):
         _data = str(buffer, "utf-8").rstrip("\x00")
         # print("python: merger {} recv {} size: {}".format(my_id, slot_name, len(encoded_data)), flush=True)
         print("trans{}end{}: {}".format(my_id, get_trans_end_time(), get_now()))
-        data = _data.split()
-        for x in data:
-            heapq.heappush(min_heap, int(x))
+        sorted_partitions.append(map(int, _data.split()))
 
     slot_name = "checker_{}".format(my_id)
-    final_data = []
-    while min_heap:
-        final_data.append(heapq.heappop(min_heap))
+    final_data = list(heapq.merge(*sorted_partitions))
 
-    setattr(__import__("__main__"), slot_name, pyas.buffer_register(slot_name, buffer_size))
     encoded_data = " ".join(map(str, final_data)).encode()
+    publish_data_buffer(slot_name, encoded_data)
     # print("python: merger {} pass {} size: {}".format(my_id, slot_name, len(encoded_data)), flush=True) # important
-    getattr(__import__("__main__"), slot_name)[:len(encoded_data)] = encoded_data
     print("compute{}end{}: {}".format(my_id, get_compute_end_time(), get_now()))
     # print("python: merger {} finished!".format(my_id), flush=True)
 

@@ -42,10 +42,7 @@ struct Pivots {
 
 #[no_mangle]
 pub fn main() -> Result<()> {
-    println!(
-        "com_start1: {}",
-        SystemTime::now().duration_since(UNIX_EPOCH).as_micros() as f64 / 1000000f64
-    );
+    print_timestamp("com_start1");
     let my_id = args::get("id").unwrap();
     let sorter_num: usize = {
         let n = args::get("sorter_num").unwrap();
@@ -72,8 +69,8 @@ pub fn main() -> Result<()> {
         DataBuffer::from_buffer_slot(format!("input-part-{}", my_id)).unwrap();
     let content = input.content.as_str();
 
-    let mut buffer: DataBuffer<VecArg> =
-        DataBuffer::with_slot(format!("sorter-resp-part-{}", my_id));
+    let output_slot = format!("sorter-resp-part-{}", my_id);
+    let mut buffer: DataBuffer<VecArg> = DataBuffer::with_slot(output_slot.clone());
 
     let start = SystemTime::now();
     for num in content.split(',') {
@@ -96,6 +93,9 @@ pub fn main() -> Result<()> {
 
     let start = SystemTime::now();
     buffer.array.sort();
+    #[cfg(not(feature = "file-based"))]
+    as_std::agent::buffer_set_len(&output_slot, buffer.array.len() * core::mem::size_of::<u32>())
+        .expect("failed to set sorter buffer length");
     println!(
         "numbers array length is {}, sort cost {}ms",
         buffer.array.len(),
@@ -120,6 +120,12 @@ pub fn main() -> Result<()> {
                 let mut pivots_buffer: DataBuffer<VecArg> =
                     DataBuffer::with_slot(format!("pivots-{}", i));
                 pivots_buffer.array = pivots.clone();
+                #[cfg(not(feature = "file-based"))]
+                as_std::agent::buffer_set_len(
+                    &format!("pivots-{}", i),
+                    pivots_buffer.array.len() * core::mem::size_of::<u32>(),
+                )
+                .expect("failed to set pivot buffer length");
             }
             #[cfg(feature = "pkey_per_func")]
             {
@@ -129,9 +135,11 @@ pub fn main() -> Result<()> {
             }
         }
     }
-    println!(
-        "com_end1: {}",
-        SystemTime::now().duration_since(UNIX_EPOCH).as_micros() as f64 / 1000000f64
-    );
+    print_timestamp("com_end1");
     Ok(().into())
+}
+
+fn print_timestamp(label: &str) {
+    let micros = SystemTime::now().duration_since(UNIX_EPOCH).as_micros();
+    println!("{}: {}.{:06}", label, micros / 1_000_000, micros % 1_000_000);
 }

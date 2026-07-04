@@ -145,6 +145,13 @@ pub enum CommonHostCall {
     GetTid,
     #[display(fmt = "host_getrandom")]
     GetRandom,
+
+    // Keep new hostcalls at the end to preserve existing discriminants used by
+    // prebuilt user modules.
+    #[display(fmt = "buffer_set_len")]
+    BufferSetLen,
+    #[display(fmt = "buffer_len")]
+    BufferLen,
 }
 
 #[derive(Debug, Display)]
@@ -200,6 +207,8 @@ impl HostCallID {
                 CommonHostCall::BufferAlloc
                 | CommonHostCall::BufferAllocRaw
                 | CommonHostCall::BufferRegister
+                | CommonHostCall::BufferSetLen
+                | CommonHostCall::BufferLen
                 | CommonHostCall::AccessBuffer
                 | CommonHostCall::BufferDealloc
                 | CommonHostCall::Mmap

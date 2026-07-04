@@ -5,6 +5,7 @@
 
 __attribute__((import_module("env"), import_name("buffer_register"))) void buffer_register(void *slot_name, int name_size, void *buffer, int buffer_size);
 __attribute__((import_module("env"), import_name("access_buffer"))) void access_buffer(void *slot_name, int name_size, void *buffer, int buffer_size);
+__attribute__((import_module("env"), import_name("buffer_len"))) long long buffer_len(void *slot_name, int name_size);
 
 // #define MAX_ARRAY_LENGTH 152221
 // #define MAX_BUFFER_SIZE 1024*1024+152221
@@ -81,10 +82,13 @@ int main(int argc, char* argv[]) {
         char slot_name[20];
         sprintf(slot_name, "merger_%d_%d", i, id);
         char *buffer;
-        buffer = (char *)malloc(MAX_BUFFER_SIZE * sizeof(char));
-        memset(buffer, 0, MAX_BUFFER_SIZE * sizeof(char));
+        long long length = buffer_len(slot_name, strlen(slot_name));
+        if (length < 0)
+            return 3;
+        buffer = (char *)malloc((size_t)length);
+        memset(buffer, 0, (size_t)length);
         buffer[0] = '\0'; // 初始化为空字符串
-        access_buffer(slot_name, strlen(slot_name), buffer, MAX_BUFFER_SIZE);
+        access_buffer(slot_name, strlen(slot_name), buffer, (int)length);
         char *ptr = buffer;
         int num;
         while (sscanf(ptr, "%d", &num) == 1) {
@@ -146,9 +150,10 @@ int main(int argc, char* argv[]) {
     
     char slot_name[20];
     sprintf(slot_name, "checker_%d", id);
-    char *buffer;
-    buffer = (char *)malloc(MAX_BUFFER_SIZE * sizeof(char));
-    memset(buffer, 0, MAX_BUFFER_SIZE * sizeof(char));
+    size_t output_size = 1;
+    for (int i = 0; i < resultIndex; i++)
+        output_size += (size_t)snprintf(NULL, 0, "%d ", result[i]);
+    char *buffer = (char *)malloc(output_size);
     buffer[0] = '\0'; // 初始化为空字符串
     char *ptr = buffer;
     for (int i = 0; i < resultIndex; i++) {
@@ -162,7 +167,7 @@ int main(int argc, char* argv[]) {
     // buffer[strlen(buffer) - 1] = '\0';
     *ptr++ = '\0';
     printf("result_index: %d\n", resultIndex);
-    buffer_register(slot_name, strlen(slot_name), buffer, MAX_BUFFER_SIZE);
+    buffer_register(slot_name, strlen(slot_name), buffer, ptr - buffer);
     free(buffer);
     
 

@@ -217,13 +217,32 @@ pub unsafe extern "C" fn as_buffer_publish(
     match libos!(buffer_register(
         slot,
         header as usize,
-        AS_BUFFER_FINGERPRINT
+        AS_BUFFER_FINGERPRINT,
+        len
     )) {
         Ok(()) => {
             ptr::write(buffer, AsBuffer::empty());
             0
         }
         Err(error) => mm_error_code(&error),
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn as_buffer_len(slot: *const c_char, out: *mut usize) -> i32 {
+    if out.is_null() {
+        return -EINVAL as i32;
+    }
+    let slot = match buffer_slot(slot) {
+        Ok(slot) => slot,
+        Err(error) => return error,
+    };
+    match libos!(buffer_len(slot)) {
+        Some(len) => {
+            ptr::write(out, len);
+            0
+        }
+        None => -ENOENT as i32,
     }
 }
 
@@ -237,19 +256,20 @@ pub unsafe extern "C" fn as_buffer_take(slot: *const c_char, out: *mut AsBuffer)
         Ok(slot) => slot,
         Err(error) => return error,
     };
-    let (allocation, fingerprint) = match libos!(access_buffer(slot)) {
+    let (allocation, fingerprint, data_len) = match libos!(access_buffer(slot)) {
         Some(metadata) => metadata,
         None => return -ENOENT as i32,
     };
     if fingerprint != AS_BUFFER_FINGERPRINT {
-        let _ = libos!(buffer_register(slot, allocation, fingerprint));
+        let _ = libos!(buffer_register(slot, allocation, fingerprint, data_len));
         return -EPROTO;
     }
     let header = allocation as *mut AsBufferHeader;
-    if (*header).magic != AS_BUFFER_MAGIC || (*header).len > (*header).capacity {
-        let _ = libos!(buffer_register(slot, allocation, fingerprint));
+    if (*header).magic != AS_BUFFER_MAGIC || data_len > (*header).capacity {
+        let _ = libos!(buffer_register(slot, allocation, fingerprint, data_len));
         return -EPROTO;
     }
+    (*header).len = data_len;
     ptr::write(
         out,
         AsBuffer {
@@ -622,18 +642,18 @@ pub unsafe extern "C" fn alloy_syscall(
             if (a2 as *mut LinuxTimeSpec).is_null() {
                 return neg_errno(EFAULT);
             }
-            match libos!(get_time()) {
-                Ok(nanos) => {
-                    ptr::write(
-                        a2 as *mut LinuxTimeSpec,
-                        LinuxTimeSpec {
-                            sec: (nanos / 1_000_000_000) as i64,
-                            nsec: (nanos % 1_000_000_000) as i64,
-                        },
-                    );
-                    0
-                }
-                Err(_) => neg_errno(EINVAL),
+            let nanos = libos!(get_time());
+            if nanos == u64::MAX {
+                neg_errno(EINVAL)
+            } else {
+                ptr::write(
+                    a2 as *mut LinuxTimeSpec,
+                    LinuxTimeSpec {
+                        sec: (nanos / 1_000_000_000) as i64,
+                        nsec: (nanos % 1_000_000_000) as i64,
+                    },
+                );
+                0
             }
         }
         SYS_GETRANDOM => libos!(getrandom(a1 as *mut u8, a2 as usize, a3 as u32)),

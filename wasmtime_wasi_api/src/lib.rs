@@ -37,6 +37,9 @@ fn import_all(linker: &mut Linker<LibosCtx>) {
         )
         .unwrap();
     linker
+        .func_wrap("env", "buffer_len", data_buffer::buffer_len)
+        .unwrap();
+    linker
         .func_wrap(
             "env",
             "access_buffer",

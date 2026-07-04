@@ -1,18 +1,22 @@
 #![no_std]
-extern crate alloc;
 
-use alloc::string::{String, ToString};
 use nix::{
     libc::{timespec, CLOCK_REALTIME},
     time::clock_gettime,
 };
 
 #[no_mangle]
-pub fn get_time() -> Result<u128, String> {
-    let r = clock_gettime(CLOCK_REALTIME.into()).map_err(|e| e.to_string())?;
-    let a = r.tv_sec() as u128 * 1_000_000_000;
-    let b = r.tv_nsec() as u128;
-    Ok(a + b)
+pub extern "C" fn get_time() -> u64 {
+    let Ok(r) = clock_gettime(CLOCK_REALTIME.into()) else {
+        return u64::MAX;
+    };
+    let Some(nanos) = (r.tv_sec() as u64)
+        .checked_mul(1_000_000_000)
+        .and_then(|seconds| seconds.checked_add(r.tv_nsec() as u64))
+    else {
+        return u64::MAX;
+    };
+    nanos
 }
 
 #[no_mangle]
@@ -28,9 +32,9 @@ pub fn host_nanosleep(sec: u64, nsec: u64) {
 
 #[test]
 fn get_time_test() {
-    let t = get_time().unwrap();
-    assert!(t > 1_697_111_969 * 1_000_000_000, "error time: {}", t);
-    assert!(t < 1_735_660_800 * 1_000_000_000, "error time: {}", t);
+    let t = get_time();
+    assert_ne!(t, u64::MAX, "clock_gettime failed");
+    assert!(t > 1_577_836_800 * 1_000_000_000, "error time: {}", t);
 }
 
 #[test]

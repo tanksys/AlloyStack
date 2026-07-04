@@ -31,6 +31,16 @@ impl FaaSFuncError {
 }
 
 #[cfg(not(feature = "file-based"))]
+pub fn buffer_len(slot: &str) -> Option<usize> {
+    crate::libos::libos!(buffer_len(slot))
+}
+
+#[cfg(not(feature = "file-based"))]
+pub fn buffer_set_len(slot: &str, data_len: usize) -> as_hostcall::mm::MMResult<()> {
+    crate::libos::libos!(buffer_set_len(slot, data_len))
+}
+
+#[cfg(not(feature = "file-based"))]
 mod refer_based_impl {
     use core::{alloc::Layout, borrow::Borrow, mem::ManuallyDrop};
 
@@ -93,9 +103,9 @@ mod refer_based_impl {
         }
 
         pub fn from_buffer_slot(slot: String) -> Option<Self> {
-            let buffer_meta: Option<(usize, u64)> = libos!(access_buffer(&slot));
+            let buffer_meta: Option<(usize, u64, usize)> = libos!(access_buffer(&slot));
 
-            buffer_meta.map(|(raw_ptr, fingerprint)| {
+            buffer_meta.map(|(raw_ptr, fingerprint, _data_len)| {
                 if fingerprint != T::__fingerprint() {
                     println!("wrong data type, {}, {}", fingerprint, T::__fingerprint());
                     panic!("");

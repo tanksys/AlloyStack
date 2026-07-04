@@ -17,8 +17,10 @@ bitflags! {
 
 pub type BufferAllocFunc = fn(&str, Layout, u64) -> MMResult<usize>;
 pub type BufferAllocRawFunc = fn(Layout) -> MMResult<usize>;
-pub type BufferRegisterFunc = fn(&str, usize, u64) -> MMResult<()>;
-pub type AccessBufferFunc = fn(&str) -> Option<(usize, u64)>;
+pub type BufferRegisterFunc = fn(&str, usize, u64, usize) -> MMResult<()>;
+pub type BufferSetLenFunc = fn(&str, usize) -> MMResult<()>;
+pub type BufferLenFunc = fn(&str) -> Option<usize>;
+pub type AccessBufferFunc = fn(&str) -> Option<(usize, u64, usize)>;
 pub type BufferDeallocFunc = fn(usize, Layout);
 pub type MemmapFunc = fn(usize, usize, ProtFlags, Fd) -> MMResult<usize>;
 pub type MemunmapFunc = fn(&mut [u8], bool) -> MMResult<()>;

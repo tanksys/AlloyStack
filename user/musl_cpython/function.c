@@ -112,6 +112,43 @@ static PyObject *pyas_access_buffer(PyObject *self, PyObject *args)
     Py_RETURN_NONE;
 }
 
+static PyObject *pyas_buffer_len(PyObject *self, PyObject *args)
+{
+    const char *slot;
+    size_t len;
+    int error;
+
+    (void)self;
+    if (!PyArg_ParseTuple(args, "s:buffer_len", &slot))
+        return NULL;
+    error = as_buffer_len(slot, &len);
+    if (error)
+        return pyas_error("as_buffer_len", error);
+    return PyLong_FromSize_t(len);
+}
+
+static PyObject *pyas_move_buffer(PyObject *self, PyObject *args)
+{
+    const char *source_slot;
+    const char *target_slot;
+    as_buffer_t buffer = AS_BUFFER_INIT;
+    int error;
+
+    (void)self;
+    if (!PyArg_ParseTuple(args, "ss:move_buffer", &source_slot, &target_slot))
+        return NULL;
+    error = as_buffer_take(source_slot, &buffer);
+    if (error)
+        return pyas_error("as_buffer_take", error);
+    error = as_buffer_publish(target_slot, &buffer, buffer.len);
+    if (error) {
+        if (buffer.data)
+            as_buffer_release(&buffer);
+        return pyas_error("as_buffer_publish", error);
+    }
+    Py_RETURN_NONE;
+}
+
 static PyObject *pyas_take_buffer(PyObject *self, PyObject *args)
 {
     const char *slot;
@@ -145,6 +182,10 @@ static PyMethodDef pyas_methods[] = {
      "Allocate and publish a writable shared buffer."},
     {"access_buffer", pyas_access_buffer, METH_VARARGS,
      "Copy a shared buffer into a writable Python buffer without consuming it."},
+    {"buffer_len", pyas_buffer_len, METH_VARARGS,
+     "Return the valid byte length stored in a shared-buffer slot."},
+    {"move_buffer", pyas_move_buffer, METH_VARARGS,
+     "Move a shared buffer to another slot without copying."},
     {"take_buffer", pyas_take_buffer, METH_VARARGS,
      "Consume a shared buffer and return a zero-copy, read-only view."},
     {NULL, NULL, 0, NULL},

@@ -7,6 +7,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 
@@ -19,6 +20,7 @@ TRANS_DATA_RE = re.compile(r"trans data time:\s*([0-9]+(?:\.[0-9]+)?)(µs|ms)")
 TRANSFER_COST_NS_RE = re.compile(r"transfer cost:\s*([0-9]+(?:\.[0-9]+)?)\s*ns")
 RUST_COST_NS_RE = re.compile(r"data size:\s*[0-9]+\s*bytes,\s*cost\s*([0-9]+(?:\.[0-9]+)?)\s*ns")
 CURRENTLY_CLEAN_AFTER_CELL = False
+PROGRESS_INTERVAL_SECONDS = 5
 
 
 def repo_root() -> Path:
@@ -83,7 +85,7 @@ def default_config() -> dict:
     end_to_end_cells = {
         "longchain": {
             "rust": {
-                "command": f"just long_chain >/dev/null && {asvisor} --files isol_config/long_chain_n15.json --metrics total-dur",
+                "command": f"just long_chain >/dev/null && {asvisor} --files isol_config/long_chain_n10.json --metrics total-dur",
                 "parser": "total_dur_ms",
                 "cleanup": [
                     "cargo clean --manifest-path user/array_sum/Cargo.toml",
@@ -97,7 +99,7 @@ def default_config() -> dict:
                 ],
             },
             "wasm-py": {
-                "command": f"just python_long_chain >/dev/null && {asvisor} --files isol_config/wasmtime_cpython_functionchain_n5.json --metrics total-dur",
+                "command": f"just python_long_chain >/dev/null && {asvisor} --files isol_config/wasmtime_cpython_functionchain_n10.json --metrics total-dur",
                 "parser": "total_dur_ms",
                 "cleanup": [
                     "cargo clean --manifest-path user/wasmtime_cpython_func/Cargo.toml",
@@ -111,7 +113,7 @@ def default_config() -> dict:
                 ],
             },
             "musl-py": {
-                "command": f"just musl_cpython >/dev/null && {asvisor} --files isol_config/musl_cpython_functionchain_n5.json --metrics total-dur",
+                "command": f"just musl_cpython >/dev/null && {asvisor} --files isol_config/musl_cpython_functionchain_n10.json --metrics total-dur",
                 "parser": "total_dur_ms",
                 "cleanup": [
                     "cargo clean --manifest-path user/musl_cpython/Cargo.toml",
@@ -141,7 +143,7 @@ def default_config() -> dict:
                 ],
             },
             "wasm-py": {
-                "command": f"just python_parallel_sort >/dev/null && {asvisor} --files isol_config/wasmtime_cpython_parallel_sort_c1.json --metrics total-dur",
+                "command": f"just python_parallel_sort >/dev/null && {asvisor} --files isol_config/wasmtime_cpython_parallel_sort_c3.json --metrics total-dur",
                 "parser": "total_dur_ms",
                 "cleanup": [
                     "cargo clean --manifest-path user/wasmtime_cpython_parallel_sort/Cargo.toml",
@@ -158,7 +160,7 @@ def default_config() -> dict:
                 ],
             },
             "musl-py": {
-                "command": f"just musl_cpython >/dev/null && {asvisor} --files isol_config/musl_cpython_parallel_sort_c1.json --metrics total-dur",
+                "command": f"just musl_cpython >/dev/null && {asvisor} --files isol_config/musl_cpython_parallel_sort_c3.json --metrics total-dur",
                 "parser": "total_dur_ms",
                 "cleanup": [
                     "cargo clean --manifest-path user/musl_cpython/Cargo.toml",
@@ -184,7 +186,7 @@ def default_config() -> dict:
                 ],
             },
             "wasm-py": {
-                "command": f"just python_wordcount >/dev/null && {asvisor} --files isol_config/wasmtime_cpython_wordcount_c1.json --metrics total-dur",
+                "command": f"just python_wordcount >/dev/null && {asvisor} --files isol_config/wasmtime_cpython_wordcount_c3.json --metrics total-dur",
                 "parser": "total_dur_ms",
                 "cleanup": [
                     "cargo clean --manifest-path user/wasmtime_cpython_wordcount/Cargo.toml",
@@ -199,7 +201,7 @@ def default_config() -> dict:
                 ],
             },
             "musl-py": {
-                "command": f"just musl_cpython >/dev/null && {asvisor} --files isol_config/musl_cpython_wordcount_c1.json --metrics total-dur",
+                "command": f"just musl_cpython >/dev/null && {asvisor} --files isol_config/musl_cpython_wordcount_c3.json --metrics total-dur",
                 "parser": "total_dur_ms",
                 "cleanup": [
                     "cargo clean --manifest-path user/musl_cpython/Cargo.toml",
@@ -262,7 +264,13 @@ def load_config(path: str | None) -> dict:
     return merge_dict(config, override)
 
 
-def run_command(command: str, cwd: Path, unset_cc: bool, interactive: bool = False) -> str:
+def run_command(
+    command: str,
+    cwd: Path,
+    unset_cc: bool,
+    interactive: bool = False,
+    progress_label: str | None = None,
+) -> str:
     env = os.environ.copy()
     if unset_cc:
         env.pop("CC", None)
@@ -275,14 +283,28 @@ def run_command(command: str, cwd: Path, unset_cc: bool, interactive: bool = Fal
         )
         output = ""
     else:
-        completed = subprocess.run(
+        process = subprocess.Popen(
             ["bash", "-lc", command],
             cwd=cwd,
             env=env,
-            capture_output=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
             text=True,
         )
-        output = completed.stdout + completed.stderr
+        started_at = time.monotonic()
+        while True:
+            try:
+                output, _ = process.communicate(timeout=PROGRESS_INTERVAL_SECONDS)
+                break
+            except subprocess.TimeoutExpired:
+                if progress_label:
+                    elapsed = int(time.monotonic() - started_at)
+                    print(
+                        f"[progress] {progress_label}: running for {elapsed}s",
+                        file=sys.stderr,
+                        flush=True,
+                    )
+        completed = process
     if completed.returncode != 0:
         raise RuntimeError(output.strip() or f"command failed: {command}")
     return output
@@ -377,11 +399,22 @@ def parse_metric(output: str, parser_name: str) -> float:
     raise ValueError(f"unsupported parser: {parser_name}")
 
 
-def collect_table(section: dict, cwd: Path, unset_cc: bool) -> dict:
+def collect_table(
+    section_name: str,
+    section: dict,
+    cwd: Path,
+    unset_cc: bool,
+) -> dict:
     rows = section["rows"]
     columns = section["columns"]
     cells = section["cells"]
     results: dict[str, dict[str, str]] = {}
+    total_cells = sum(
+        cells.get(row, {}).get(column) is not None
+        for row in rows
+        for column in columns
+    )
+    cell_index = 0
 
     for row in rows:
         results[row] = {}
@@ -390,8 +423,18 @@ def collect_table(section: dict, cwd: Path, unset_cc: bool) -> dict:
             if cell is None:
                 results[row][column] = "N/A"
                 continue
+            cell_index += 1
+            progress_label = (
+                f"{section_name} [{cell_index}/{total_cells}] "
+                f"row={row}, backend={column}"
+            )
             if "value_ms" in cell:
                 results[row][column] = f"{float(cell['value_ms']):.3f}"
+                print(
+                    f"[done] {progress_label}: {results[row][column]} ms (fixed)",
+                    file=sys.stderr,
+                    flush=True,
+                )
                 continue
             temp_config_path = None
             context = {
@@ -400,6 +443,8 @@ def collect_table(section: dict, cwd: Path, unset_cc: bool) -> dict:
                 "workload": row,
                 "backend": column,
             }
+            started_at = time.monotonic()
+            print(f"[start] {progress_label}", file=sys.stderr, flush=True)
             try:
                 data_size_bytes = str(eval_data_size(row)) if "*" in row else row
                 context["data_size_bytes"] = data_size_bytes
@@ -416,11 +461,26 @@ def collect_table(section: dict, cwd: Path, unset_cc: bool) -> dict:
                     command.format(**context),
                     cwd,
                     unset_cc,
+                    progress_label=progress_label,
                 )
                 value = parse_metric(output, cell["parser"])
                 results[row][column] = f"{value:.3f}"
+                elapsed = time.monotonic() - started_at
+                print(
+                    f"[done] {progress_label}: {results[row][column]} ms "
+                    f"in {elapsed:.1f}s",
+                    file=sys.stderr,
+                    flush=True,
+                )
             except Exception as exc:
-                results[row][column] = f"N/A ({str(exc).splitlines()[-1]})"
+                error = str(exc).splitlines()[-1]
+                results[row][column] = f"N/A ({error})"
+                elapsed = time.monotonic() - started_at
+                print(
+                    f"[failed] {progress_label}: {error} after {elapsed:.1f}s",
+                    file=sys.stderr,
+                    flush=True,
+                )
             finally:
                 if CURRENTLY_CLEAN_AFTER_CELL and cell is not None:
                     cleanup_commands = cell.get("cleanup", [])
@@ -540,10 +600,16 @@ def main() -> int:
             run_prepare_command(command, cwd, unset_cc)
         results = {
             "data_transfer_latency": collect_table(
-                config["data_transfer_latency"], cwd, unset_cc
+                "data_transfer_latency",
+                config["data_transfer_latency"],
+                cwd,
+                unset_cc,
             ),
             "end_to_end_latency": collect_table(
-                config["end_to_end_latency"], cwd, unset_cc
+                "end_to_end_latency",
+                config["end_to_end_latency"],
+                cwd,
+                unset_cc,
             ),
         }
         write_results(results_path, results)

@@ -3,7 +3,8 @@
     ["sys", "libsys.so"],
     ["time", "libtime.so"],
     ["stdio", "libstdio.so"],
-    ["mm", "libmm.so"]
+    ["mm", "libmm.so"],
+    ["fdtab", "libfdtab.so"]
   ],
   "apps": [
     ["trans_data", "libmusl_trans_data.so"]

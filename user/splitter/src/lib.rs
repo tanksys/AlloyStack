@@ -30,10 +30,12 @@ struct Pivots {
 #[no_mangle]
 pub fn main() -> Result<()> {
     let my_id = args::get("id").unwrap();
+    let start_micros = timestamp_micros();
     println!(
-        "splitter id: {}, com_start2: {}",
+        "splitter id: {}, com_start2: {}.{:06}",
         my_id,
-        SystemTime::now().duration_since(UNIX_EPOCH).as_micros() as f64 / 1000000f64
+        start_micros / 1_000_000,
+        start_micros % 1_000_000
     );
 
     let numbers: DataBuffer<VecArg> =
@@ -48,8 +50,8 @@ pub fn main() -> Result<()> {
 
     let partitions = split_numbers(&numbers.array, &pivots.array);
     for (idx, partition) in partitions.iter().enumerate() {
-        let mut part: DataBuffer<VecArg> =
-            DataBuffer::with_slot(format!("splitter-{}-resp-part-{}", my_id, idx));
+        let output_slot = format!("splitter-{}-resp-part-{}", my_id, idx);
+        let mut part: DataBuffer<VecArg> = DataBuffer::with_slot(output_slot.clone());
         #[cfg(feature = "pkey_per_func")]
         {
             part.array.resize(partition.len(), 0).unwrap();
@@ -61,6 +63,12 @@ pub fn main() -> Result<()> {
         {
             part.array = partition.clone();
         }
+        #[cfg(not(feature = "file-based"))]
+        as_std::agent::buffer_set_len(
+            &output_slot,
+            part.array.len() * core::mem::size_of::<u32>(),
+        )
+        .expect("failed to set splitter buffer length");
     }
 
     println!(
@@ -72,12 +80,18 @@ pub fn main() -> Result<()> {
             .map(|part| part.len())
             .collect::<Vec<usize>>()
     );
-    println!(
-        "com_end2: {}",
-        SystemTime::now().duration_since(UNIX_EPOCH).as_micros() as f64 / 1000000f64
-    );
+    print_timestamp("com_end2");
 
     Ok(().into())
+}
+
+fn timestamp_micros() -> u128 {
+    SystemTime::now().duration_since(UNIX_EPOCH).as_micros()
+}
+
+fn print_timestamp(label: &str) {
+    let micros = timestamp_micros();
+    println!("{}: {}.{:06}", label, micros / 1_000_000, micros % 1_000_000);
 }
 
 fn split_numbers(numbers: &[u32], pivots: &[u32]) -> Vec<Vec<u32>> {

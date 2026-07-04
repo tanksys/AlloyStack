@@ -39,9 +39,13 @@ pub fn main() -> Result<()> {
             .count
     };
 
-    let mut next_buffer: DataBuffer<Arraysum> = DataBuffer::with_slot(format!("slot_{}", n));
+    let output_slot = format!("slot_{}", n);
+    let mut next_buffer: DataBuffer<Arraysum> = DataBuffer::with_slot(output_slot.clone());
     next_buffer.raw_data = n.repeat(DATA_SIZE);
     next_buffer.count = previous_cnt + 1;
+    #[cfg(not(feature = "file-based"))]
+    as_std::agent::buffer_set_len(&output_slot, next_buffer.raw_data.len())
+        .expect("failed to set longchain buffer length");
     println!("count is {}", next_buffer.count);
 
     Ok(().into())

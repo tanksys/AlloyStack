@@ -117,9 +117,10 @@ int main(int argc, char* argv[]) {
             int idx = (i+1) * index / merger_num;
             pivot[i] = arrays[idx];
         }
-        char *buffer;
-        buffer = (char *)malloc(MAX_BUFFER_SIZE * sizeof(char));
-        memset(buffer, 0, MAX_BUFFER_SIZE * sizeof(char));
+        size_t pivot_size = 1;
+        for (int i = 0; i < merger_num - 1; i++)
+            pivot_size += (size_t)snprintf(NULL, 0, "%d ", pivot[i]);
+        char *buffer = (char *)malloc(pivot_size);
         buffer[0] = '\0';
         for (int i = 0; i < merger_num-1; i++) {
             char temp[12];
@@ -131,7 +132,7 @@ int main(int argc, char* argv[]) {
             char slot_name[20];
             sprintf(slot_name, "pivot_%d", k);
             // printf("pivotname: %s\n", slot_name);
-            buffer_register(slot_name, strlen(slot_name), buffer, MAX_BUFFER_SIZE);
+            buffer_register(slot_name, strlen(slot_name), buffer, strlen(buffer) + 1);
         }
         // free(buffer);
     }
@@ -141,8 +142,10 @@ int main(int argc, char* argv[]) {
     // write(1, "alloc start\n", sizeof("alloc start\n"));
     char slot_name[20];
     sprintf(slot_name, "sorter_%d", id);
-    char *buffer;
-    buffer = (char *)malloc(MAX_BUFFER_SIZE * sizeof(char));
+    size_t output_size = 1;
+    for (int value : arrays)
+        output_size += (size_t)snprintf(NULL, 0, "%d ", value);
+    char *buffer = (char *)malloc(output_size);
     // time(&now);
     // printf("%ld alloc finished\n", now);
     // write(1, "alloc finished\n", sizeof("alloc finished\n"));
@@ -165,7 +168,7 @@ int main(int argc, char* argv[]) {
     // buffer[strlen(buffer) - 1] = '\0';
     // write(1, "buffer make finished\n", sizeof("buffer make finished\n"));
     get_time();
-    buffer_register(slot_name, strlen(slot_name), buffer, MAX_BUFFER_SIZE);
+    buffer_register(slot_name, strlen(slot_name), buffer, ptr - buffer);
     get_time();
     // write(1, "buffer register finished\n", sizeof("buffer register finished\n"));
     // free(buffer);
