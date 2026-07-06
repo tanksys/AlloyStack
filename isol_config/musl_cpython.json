@@ -1,0 +1,22 @@
+{
+  "services": [
+    ["sys", "libsys.so"],
+    ["time", "libtime.so"],
+    ["stdio", "libstdio.so"],
+    ["mm", "libmm.so"],
+    ["fdtab", "libfdtab.so"],
+    ["fatfs", "libfatfs.so"]
+  ],
+  "apps": [
+    ["cpython", "libmusl_cpython.so"]
+  ],
+  "fs_image": "fs_images/fatfs.img",
+  "groups": [
+    {
+      "list": ["cpython"],
+      "args": {
+        "pyfile_path": "/wasm_bench/time.py"
+      }
+    }
+  ]
+}

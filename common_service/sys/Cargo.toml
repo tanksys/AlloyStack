@@ -1,0 +1,16 @@
+[package]
+name = "sys"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["dylib"]
+
+[dependencies]
+as_hostcall = { path = "../../as_hostcall", features = ["sys"] }
+as_std = { path = "../../as_std", features = ["alloc_def", "panic_def"] }
+libc = "0.2.150"
+
+[features]
+default = []
+mpk = ["as_hostcall/enable_mpk", "as_std/mpk"]

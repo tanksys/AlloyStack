@@ -5,24 +5,42 @@
 
 __attribute__((import_module("env"), import_name("buffer_register"))) void buffer_register(void *slot_name, int name_size, void *buffer, int buffer_size);
 __attribute__((import_module("env"), import_name("access_buffer"))) void access_buffer(void *slot_name, int name_size, void *buffer, int buffer_size);
+__attribute__((import_module("env"), import_name("buffer_len"))) long long buffer_len(void *slot_name, int name_size);
 
 int main(int argc, char* argv[]) {
     int id = atoi(argv[1]);
     int func_num = atoi(argv[2]);
+    int chain_len = argc > 3 ? atoi(argv[3]) : 10;
+    int bufferSize = argc > 4 ? atoi(argv[4]) : 2;
+    if (bufferSize < 2 || func_num < 0 || func_num >= chain_len)
+        return 2;
     printf("func.c recieve: id: %d, func_num: %d\n", id, func_num);
 
     char slot_name[20];
-    int bufferSize = 2;
-    char *buffer = (char *)malloc(bufferSize * sizeof(char));
-    
+    char *buffer;
+
     if (func_num == 0) {
+        buffer = (char *)malloc(bufferSize);
+        if (buffer == NULL)
+            return 3;
         sprintf(slot_name, "buffer_%d_%d", func_num, id);
         buffer[0] = '0';
-        buffer[1] = '\0';
+        buffer[bufferSize - 1] = '\0';
         buffer_register(slot_name, strlen(slot_name), buffer, bufferSize);
     } else {
         sprintf(slot_name, "buffer_%d_%d", func_num-1, id);
+        long long length = buffer_len(slot_name, strlen(slot_name));
+        if (length < 0)
+            return 3;
+        bufferSize = (int)length;
+        buffer = (char *)malloc(bufferSize);
+        if (buffer == NULL)
+            return 4;
         access_buffer(slot_name, strlen(slot_name), buffer, bufferSize);
+        if (func_num + 1 == chain_len) {
+            free(buffer);
+            return 0;
+        }
         sprintf(slot_name, "buffer_%d_%d", func_num, id);
         buffer[0] += 1;
         buffer_register(slot_name, strlen(slot_name), buffer, bufferSize);

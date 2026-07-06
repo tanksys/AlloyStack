@@ -1,13 +1,12 @@
 #![no_std]
 
 extern crate alloc;
-use core::mem::forget;
 
-use alloc::{string::{String, ToString}, vec::Vec};
+use alloc::{string::ToString, vec::Vec};
 use spin::Mutex;
 
 use as_hostcall::types::{OpenFlags, OpenMode};
-use as_std::{agent::FaaSFuncResult as Result, args, println, libos::libos, time::{SystemTime, UNIX_EPOCH}};
+use as_std::{agent::FaaSFuncResult as Result, args, println, libos::libos};
 
 
 use wasmtime_wasi_api::{wasmtime, LibosCtx};
@@ -25,11 +24,17 @@ lazy_static::lazy_static! {
 }
 
 fn func_body() -> Result<()> {
+    let data_size = args::get("data_size").unwrap_or("4096");
     let _open_root = *MUST_OPEN_ROOT;
 
     let lock = INIT_LOCK.lock();
     let (engine, module, linker) = wasmtime_wasi_api::build_wasm(CWASM);
     drop(lock);
+
+    wasmtime_wasi_api::set_wasi_args("0", Vec::from([
+        "trans_data.wasm".to_string(),
+        data_size.to_string(),
+    ]));
 
     let mut store = Store::new(&engine, LibosCtx{id: "0".to_string()});
     let instance = linker.instantiate(&mut store, &module)?;

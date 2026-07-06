@@ -20,6 +20,8 @@ pub mod mpk;
 pub mod signal;
 #[cfg(feature = "socket")]
 pub mod socket;
+#[cfg(feature = "sys")]
+pub mod sys;
 pub mod types;
 
 use alloc::{borrow::ToOwned, string::String};
@@ -43,12 +45,20 @@ pub enum CommonHostCall {
     Read,
     #[display(fmt = "open")]
     Open,
+    #[display(fmt = "open_dir")]
+    OpenDir,
+    #[display(fmt = "getdents")]
+    GetDents,
     #[display(fmt = "close")]
     Close,
     #[display(fmt = "lseek")]
     Lseek,
+    #[display(fmt = "lseek64")]
+    Lseek64,
     #[display(fmt = "stat")]
     Stat,
+    #[display(fmt = "path_stat")]
+    PathStat,
     #[display(fmt = "readdir")]
     ReadDir,
     #[display(fmt = "connect")]
@@ -73,8 +83,14 @@ pub enum CommonHostCall {
     FatfsClose,
     #[display(fmt = "fatfs_seek")]
     FatfsSeek,
+    #[display(fmt = "fatfs_seek64")]
+    FatfsSeek64,
     #[display(fmt = "fatfs_stat")]
     FatfsStat,
+    #[display(fmt = "fatfs_path_stat")]
+    FatfsPathStat,
+    #[display(fmt = "fatfs_readdir")]
+    FatfsReadDir,
 
     #[display(fmt = "addrinfo")]
     SmoltcpAddrInfo,
@@ -93,6 +109,10 @@ pub enum CommonHostCall {
 
     #[display(fmt = "buffer_alloc")]
     BufferAlloc,
+    #[display(fmt = "buffer_alloc_raw")]
+    BufferAllocRaw,
+    #[display(fmt = "buffer_register")]
+    BufferRegister,
     #[display(fmt = "access_buffer")]
     AccessBuffer,
     #[display(fmt = "buffer_dealloc")]
@@ -118,6 +138,20 @@ pub enum CommonHostCall {
 
     #[display(fmt = "libos_sigaction")]
     SigAction,
+
+    #[display(fmt = "host_futex")]
+    Futex,
+    #[display(fmt = "host_gettid")]
+    GetTid,
+    #[display(fmt = "host_getrandom")]
+    GetRandom,
+
+    // Keep new hostcalls at the end to preserve existing discriminants used by
+    // prebuilt user modules.
+    #[display(fmt = "buffer_set_len")]
+    BufferSetLen,
+    #[display(fmt = "buffer_len")]
+    BufferLen,
 }
 
 #[derive(Debug, Display)]
@@ -136,10 +170,14 @@ impl HostCallID {
 
                 CommonHostCall::Write
                 | CommonHostCall::Open
+                | CommonHostCall::OpenDir
+                | CommonHostCall::GetDents
                 | CommonHostCall::Read
                 | CommonHostCall::Close
                 | CommonHostCall::Lseek
+                | CommonHostCall::Lseek64
                 | CommonHostCall::Stat
+                | CommonHostCall::PathStat
                 | CommonHostCall::ReadDir
                 | CommonHostCall::Connect
                 | CommonHostCall::Socket
@@ -153,7 +191,10 @@ impl HostCallID {
                 | CommonHostCall::FatfsRead
                 | CommonHostCall::FatfsClose
                 | CommonHostCall::FatfsSeek
-                | CommonHostCall::FatfsStat => "fatfs".to_owned(),
+                | CommonHostCall::FatfsSeek64
+                | CommonHostCall::FatfsStat
+                | CommonHostCall::FatfsPathStat
+                | CommonHostCall::FatfsReadDir => "fatfs".to_owned(),
 
                 CommonHostCall::SmoltcpAddrInfo
                 | CommonHostCall::SmoltcpConnect
@@ -164,6 +205,10 @@ impl HostCallID {
                 | CommonHostCall::SmoltcpClose => "socket".to_owned(),
 
                 CommonHostCall::BufferAlloc
+                | CommonHostCall::BufferAllocRaw
+                | CommonHostCall::BufferRegister
+                | CommonHostCall::BufferSetLen
+                | CommonHostCall::BufferLen
                 | CommonHostCall::AccessBuffer
                 | CommonHostCall::BufferDealloc
                 | CommonHostCall::Mmap
@@ -177,6 +222,10 @@ impl HostCallID {
                 CommonHostCall::SigAction => "signal".to_owned(),
 
                 CommonHostCall::GetTime | CommonHostCall::NanoSleep => "time".to_owned(),
+
+                CommonHostCall::Futex | CommonHostCall::GetTid | CommonHostCall::GetRandom => {
+                    "sys".to_owned()
+                }
             },
             HostCallID::Custom(_) => todo!(),
         }

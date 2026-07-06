@@ -20,6 +20,7 @@ thiserror-no-std = "2.0.2"
 fatfs = []
 socket = []
 signal = []
+sys = []
 
 fdtab = ["fatfs", "socket"]
 mmap_file_backend = ["fdtab"]

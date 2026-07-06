@@ -10,9 +10,8 @@ using namespace std;
 
 #define MAX_SLOT_NUM 10
 #define MAX_WORDS 18000000
-#define MAX_BUFFER_SIZE 500000
-
 __attribute__((import_module("env"), import_name("access_buffer"))) void access_buffer(void *slot_name, int name_size, void *buffer, int buffer_size);
+__attribute__((import_module("env"), import_name("buffer_len"))) long long buffer_len(void *slot_name, int name_size);
 
 void get_time() {
     timeval tv{};
@@ -33,8 +32,11 @@ int main(int argc, char* argv[]) {
     string buffer[MAX_SLOT_NUM];
 
     for (int i = 0; i < slot_num; ++i) {
-        slot_name[i] = "buffer_" + to_string(i) + "_" + to_string(id);
-        buffer[i] = string(MAX_BUFFER_SIZE, 0);
+        slot_name[i] = "buffer_" + to_string(id) + "_" + to_string(i);
+        long long size = buffer_len((void*)slot_name[i].c_str(), slot_name[i].length());
+        if (size < 0)
+            return 3;
+        buffer[i].resize((size_t)size);
         access_buffer((void*)slot_name[i].c_str(), slot_name[i].length(), (void*)buffer[i].c_str(), buffer[i].size());
     }
 

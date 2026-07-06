@@ -30,6 +30,8 @@ rust_func func_name:
 libos lib_name:
     cargo build {{ release_flag }} {{ if enable_mpk == "1" { "--features mpk" } else { "" } }} \
         --manifest-path common_service/{{ lib_name }}/Cargo.toml
+    cp common_service/{{ lib_name }}/target/{{profile}}/lib{{ lib_name }}.so \
+        target/{{profile}}/
 
 pass_args:
     just rust_func func_a
@@ -99,6 +101,122 @@ wasm_func func_name:
     @-rm target/{{profile}}/lib{{ func_name }}.so
     just symbol_link {{ func_name }}
 
+musl:
+    bash scripts/build_musl.sh
+
+musl_func func_name: musl
+    cargo build {{ release_flag }} {{ mpk_feature_flag }} \
+        --manifest-path user/{{ func_name }}/Cargo.toml
+
+musl_example: asvisor musl
+    just enable_mpk={{enable_mpk}} enable_release={{enable_release}} libos sys
+    just enable_mpk={{enable_mpk}} enable_release={{enable_release}} libos stdio
+    just enable_mpk={{enable_mpk}} enable_release={{enable_release}} libos mm
+    just enable_mpk={{enable_mpk}} enable_release={{enable_release}} libos fdtab
+    just enable_mpk={{enable_mpk}} enable_release={{enable_release}} libos fatfs
+    cargo build {{ release_flag }} {{ mpk_feature_flag }} \
+        --manifest-path user/musl_hello/Cargo.toml
+    target/{{profile}}/asvisor --files isol_config/musl_hello.json
+
+musl_wordcount: musl
+    cargo build {{ release_flag }} {{ mpk_feature_flag }} --manifest-path user/musl_mapper/Cargo.toml
+    cargo build {{ release_flag }} {{ mpk_feature_flag }} --manifest-path user/musl_reducer/Cargo.toml
+
+musl_parallel_sort: musl
+    cargo build {{ release_flag }} {{ mpk_feature_flag }} --manifest-path user/musl_sorter/Cargo.toml
+    cargo build {{ release_flag }} {{ mpk_feature_flag }} --manifest-path user/musl_splitter/Cargo.toml
+    cargo build {{ release_flag }} {{ mpk_feature_flag }} --manifest-path user/musl_merger/Cargo.toml
+    cargo build {{ release_flag }} {{ mpk_feature_flag }} --manifest-path user/musl_checker/Cargo.toml
+
+musl_long_chain: musl
+    cargo build {{ release_flag }} {{ mpk_feature_flag }} --manifest-path user/musl_longchain/Cargo.toml
+
+musl_trans_data: musl
+    cargo build {{ release_flag }} {{ mpk_feature_flag }} --manifest-path user/musl_trans_data/Cargo.toml
+
+musl_cpython: musl
+    bash scripts/build_cpython_musl.sh
+    cargo build {{ release_flag }} {{ mpk_feature_flag }} --manifest-path user/musl_cpython/Cargo.toml
+    for id in 0 1 2 3 4; do cp -L target/{{profile}}/libmusl_cpython.so target/{{profile}}/libmusl_cpython_${id}.so; done
+
+all_musl_c: musl_wordcount musl_parallel_sort musl_long_chain musl_trans_data
+all_py_musl: musl_cpython
+
+musl_c_end_to_end_latency: asvisor all_libos all_c_wasm all_musl_c
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    run_case() {
+        local workload="$1"
+        local backend="$2"
+        local config="$3"
+        local output
+        local metric
+
+        if ! output=$(target/{{profile}}/asvisor --files "$config" --metrics total-dur 2>&1); then
+            echo "$output" >&2
+            return 1
+        fi
+        if ! metric=$(printf '%s\n' "$output" | grep -m1 '"total_dur(ms)"'); then
+            echo "$output" >&2
+            echo "missing total_dur metric for $workload ($backend)" >&2
+            return 1
+        fi
+        printf '%-16s %-8s %s\n' "$workload" "$backend" "$metric"
+    }
+
+    printf '%-16s %-8s %s\n' 'workload' 'backend' 'metric'
+    run_case wordcount wasmtime isol_config/wasmtime_wordcount_c3.json
+    run_case wordcount musl isol_config/musl_wordcount_c3.json
+    run_case parallel-sort wasmtime isol_config/wasmtime_parallel_sort_c3.json
+    run_case parallel-sort musl isol_config/musl_parallel_sort_c3.json
+    run_case longchain wasmtime isol_config/wasmtime_longchain.json
+    run_case longchain musl isol_config/musl_longchain.json
+
+musl_py_end_to_end_latency: asvisor all_libos all_py_musl
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    sudo -E ./scripts/sync_python_workloads.sh
+
+    for case in \
+        "wordcount:isol_config/musl_cpython_wordcount_c1.json" \
+        "parallel-sort:isol_config/musl_cpython_parallel_sort_c1.json" \
+        "function-chain:isol_config/musl_cpython_functionchain_n5.json"
+    do
+        workload="${case%%:*}"
+        config="${case#*:}"
+        output=$(target/{{profile}}/asvisor --files "$config" --metrics total-dur 2>&1)
+        metric=$(printf '%s\n' "$output" | grep -m1 '"total_dur(ms)"')
+        printf '%-16s %s\n' "$workload" "$metric"
+    done
+
+py_end_to_end_latency_compare: asvisor all_libos all_py_wasm all_py_musl
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    sudo -E ./scripts/sync_python_workloads.sh
+
+    run_case() {
+        local workload="$1"
+        local backend="$2"
+        local config="$3"
+        local output
+        local metric
+
+        output=$(target/{{profile}}/asvisor --files "$config" --metrics total-dur 2>&1)
+        metric=$(printf '%s\n' "$output" | grep -m1 '"total_dur(ms)"')
+        printf '%-16s %-8s %s\n' "$workload" "$backend" "$metric"
+    }
+
+    printf '%-16s %-8s %s\n' 'workload' 'backend' 'metric'
+    run_case wordcount wasmtime isol_config/wasmtime_cpython_wordcount_c1.json
+    run_case wordcount musl isol_config/musl_cpython_wordcount_c1.json
+    run_case parallel-sort wasmtime isol_config/wasmtime_cpython_parallel_sort_c1.json
+    run_case parallel-sort musl isol_config/musl_cpython_parallel_sort_c1.json
+    run_case function-chain wasmtime isol_config/wasmtime_cpython_functionchain_n5.json
+    run_case function-chain musl isol_config/musl_cpython_functionchain_n5.json
+
 c_wordcount: 
     just wasm_func wasmtime_mapper
     just wasm_func wasmtime_reducer
@@ -111,6 +229,9 @@ c_parallel_sort:
 
 c_long_chain:
     just wasm_func wasmtime_longchain
+
+c_trans_data:
+    bash user/wasmtime_trans_data/build.sh
 
 all_c_wasm: c_wordcount c_parallel_sort c_long_chain
 
@@ -142,8 +263,114 @@ gen_data:
 init:
     rustup override set 'nightly-2023-12-01'
     rustup target add x86_64-unknown-linux-musl
+    rustup target add x86_64-unknown-none
     [ -f fs_images/fatfs.img ] || unzip fs_images/fatfs.zip -d fs_images
     [ -d image_content ] || mkdir image_content
+
+sync_python_workloads:
+    ./scripts/sync_python_workloads.sh
+
+latency_report *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    output="reports/latency_report.md"
+    results="reports/latency_report_results.json"
+    config=""
+    collect="0"
+    clean="0"
+
+    for arg in {{ args }}; do
+        case "$arg" in
+            output=*)
+                output="${arg#output=}"
+                ;;
+            results=*)
+                results="${arg#results=}"
+                ;;
+            config=*)
+                config="${arg#config=}"
+                ;;
+            collect=*)
+                collect="${arg#collect=}"
+                ;;
+            clean=*)
+                clean="${arg#clean=}"
+                ;;
+            *)
+                echo "unknown latency_report argument: $arg" >&2
+                exit 2
+                ;;
+        esac
+    done
+
+    cmd=(python3 scripts/report_latency.py --output "$output" --results "$results")
+    if [[ "$collect" == "1" ]]; then
+        cmd+=(--collect)
+    fi
+    if [[ "$clean" == "1" ]]; then
+        cmd+=(--clean)
+    fi
+    if [[ -n "$config" ]]; then
+        cmd+=(--config "$config")
+    fi
+
+    "${cmd[@]}"
+
+rust_latency_report *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    output="reports/rust_latency_report.md"
+    results="reports/rust_latency_report_results.json"
+    collect="0"
+    clean="0"
+    repeat="1"
+    skip_prepare="0"
+    timeout="600"
+
+    for arg in {{ args }}; do
+        case "$arg" in
+            output=*)
+                output="${arg#output=}"
+                ;;
+            results=*)
+                results="${arg#results=}"
+                ;;
+            collect=*)
+                collect="${arg#collect=}"
+                ;;
+            clean=*)
+                clean="${arg#clean=}"
+                ;;
+            repeat=*)
+                repeat="${arg#repeat=}"
+                ;;
+            skip_prepare=*)
+                skip_prepare="${arg#skip_prepare=}"
+                ;;
+            timeout=*)
+                timeout="${arg#timeout=}"
+                ;;
+            *)
+                echo "unknown rust_latency_report argument: $arg" >&2
+                exit 2
+                ;;
+        esac
+    done
+
+    cmd=(python3 scripts/rust_latency_report.py --output "$output" --results "$results" --repeat "$repeat" --timeout "$timeout")
+    if [[ "$collect" == "1" ]]; then
+        cmd+=(--collect)
+    fi
+    if [[ "$clean" == "1" ]]; then
+        cmd+=(--clean)
+    fi
+    if [[ "$skip_prepare" == "1" ]]; then
+        cmd+=(--skip-prepare)
+    fi
+
+    "${cmd[@]}"
 
 asvisor:
     cargo build {{ release_flag }}
@@ -200,19 +427,36 @@ c_end_to_end_latency: asvisor all_libos all_c_wasm
     target/{{profile}}/asvisor --files isol_config/wasmtime_longchain.json --metrics total-dur 2>&1 | grep 'total_dur'
 
 py_end_to_end_latency: asvisor all_libos all_py_wasm
-    # Python applications.
-    -sudo mount fs_images/fatfs.img image_content 2>/dev/null
-    sudo -E ./scripts/gen_data.py 1 '1 * 1024 * 1024' 1 '1 * 1024 * 1024'
+    #!/usr/bin/env bash
+    set -euo pipefail
 
+    sudo mount fs_images/fatfs.img image_content 2>/dev/null || true
+    sudo -E ./scripts/sync_python_workloads.sh
+    sudo -E ./scripts/gen_data.py 1 '1 * 1024 * 1024' 1 '1 * 1024 * 1024'
     sleep 5
-    @echo 'Python word count cost: '
-    target/{{profile}}/asvisor --files isol_config/wasmtime_cpython_wordcount_c1.json --metrics total-dur 2>&1 | grep 'total_dur'
-    
-    @echo 'Python parallel sorting cost: '
-    target/{{profile}}/asvisor --files isol_config/wasmtime_cpython_parallel_sort_c1.json --metrics total-dur 2>&1 | grep 'total_dur'
-    
-    @echo 'Python long chain cost: '
-    target/{{profile}}/asvisor --files isol_config/wasmtime_cpython_functionchain_n5.json --metrics total-dur 2>&1 | grep 'total_dur'
+
+    run_case() {
+        local label="$1"
+        local config="$2"
+        local output
+        local metric
+
+        echo "$label"
+        if ! output=$(target/{{profile}}/asvisor --files "$config" --metrics total-dur 2>&1); then
+            echo "$output" >&2
+            return 1
+        fi
+        if ! metric=$(printf '%s\n' "$output" | grep -m1 '"total_dur(ms)"'); then
+            echo "$output" >&2
+            echo "missing total_dur metric for $config" >&2
+            return 1
+        fi
+        echo "$metric"
+    }
+
+    run_case 'Python word count cost:' isol_config/wasmtime_cpython_wordcount_c1.json
+    run_case 'Python parallel sorting cost:' isol_config/wasmtime_cpython_parallel_sort_c1.json
+    run_case 'Python long chain cost:' isol_config/wasmtime_cpython_functionchain_n5.json
 
 breakdown: asvisor all_libos
     -sudo mount fs_images/fatfs.img image_content 2>/dev/null

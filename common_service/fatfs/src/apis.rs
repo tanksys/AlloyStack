@@ -49,6 +49,24 @@ pub fn fatfs_seek(fd: Fd, pos: u32) -> FatfsResult<()> {
 }
 
 #[no_mangle]
+pub fn fatfs_seek64(fd: Fd, offset: i64, whence: i32) -> FatfsResult<i64> {
+    let mut table = FTABLE
+        .lock()
+        .map_err(|e| FatfsError::AcquireLockErr(e.to_string()))?;
+
+    let file = table.get_file_mut(fd).ok_or(FatfsError::BadInputFd(fd))?;
+    let from = match whence {
+        0 if offset >= 0 => std::io::SeekFrom::Start(offset as u64),
+        1 => std::io::SeekFrom::Current(offset),
+        2 => std::io::SeekFrom::End(offset),
+        _ => return Err(FatfsError::Unknown),
+    };
+    file.seek(from)
+        .map(|pos| pos as i64)
+        .map_err(|e| FatfsError::HostIOErr(e.to_string()))
+}
+
+#[no_mangle]
 pub fn fatfs_stat(fd: Fd) -> FatfsResult<Stat> {
     let mut table = FTABLE
         .lock()
@@ -87,6 +105,82 @@ pub fn fatfs_stat(fd: Fd) -> FatfsResult<Stat> {
     })
 }
 
+fn make_stat(size: Size, mode: u32) -> Stat {
+    Stat {
+        st_dev: 0,
+        st_ino: 0,
+        st_nlink: 1,
+        st_mode: mode,
+        st_uid: 0,
+        st_gid: 0,
+        __pad0: 0,
+        st_rdev: 0,
+        st_size: size,
+        st_blksize: 0,
+        st_blocks: 0,
+        st_atime: TimeSpec {
+            tv_sec: 0,
+            tv_nsec: 0,
+        },
+        st_mtime: TimeSpec {
+            tv_sec: 0,
+            tv_nsec: 0,
+        },
+        st_ctime: TimeSpec {
+            tv_sec: 0,
+            tv_nsec: 0,
+        },
+        __unused: [0, 0, 0],
+    }
+}
+
+#[no_mangle]
+pub fn fatfs_path_stat(path: &str) -> FatfsResult<Stat> {
+    // fatfs::FileSystem uses RefCell for the underlying disk. Serialize
+    // metadata operations with open/read/write operations in FTABLE.
+    let _table = FTABLE
+        .lock()
+        .map_err(|e| FatfsError::AcquireLockErr(e.to_string()))?;
+    let root = get_fs_ref().root_dir();
+    let path = path.trim_start_matches('/');
+
+    if path.is_empty() || root.open_dir(path).is_ok() {
+        return Ok(make_stat(0, 0o040755));
+    }
+
+    let mut file = root.open_file(path).map_err(|_| FatfsError::Unknown)?;
+    let size = file
+        .stream_len()
+        .map_err(|error| FatfsError::HostIOErr(error.to_string()))?;
+    Ok(make_stat(size as Size, 0o100644))
+}
+
+#[no_mangle]
+pub fn fatfs_readdir(path: &str, buffer: &mut [u8]) -> FatfsResult<Size> {
+    let _table = FTABLE
+        .lock()
+        .map_err(|e| FatfsError::AcquireLockErr(e.to_string()))?;
+    let path = path.trim_start_matches('/');
+    let dir = get_fs_ref()
+        .root_dir()
+        .open_dir(path)
+        .map_err(|_| FatfsError::Unknown)?;
+    let mut required = 0;
+    for entry in dir.iter() {
+        let entry = entry.map_err(|error| FatfsError::HostIOErr(error.to_string()))?;
+        let name = entry.file_name();
+        let record_len = 3 + name.len();
+        if required + record_len <= buffer.len() {
+            buffer[required] = if entry.is_dir() { 4 } else { 8 };
+            buffer[required + 1..required + 3]
+                .copy_from_slice(&(name.len() as u16).to_ne_bytes());
+            buffer[required + 3..required + record_len].copy_from_slice(name.as_bytes());
+        }
+        required += record_len;
+    }
+    Ok(required)
+}
+
 #[no_mangle]
 pub fn fatfs_open(p: &str, flags: OpenFlags) -> FatfsResult<Fd> {
     let mut table = FTABLE
@@ -95,12 +189,16 @@ pub fn fatfs_open(p: &str, flags: OpenFlags) -> FatfsResult<Fd> {
 
     let root_dir = get_fs_ref().root_dir();
 
-    let file = if flags.contains(OpenFlags::O_CREAT) {
+    let mut file = if flags.contains(OpenFlags::O_CREAT) {
         root_dir.create_file(p)
     } else {
         root_dir.open_file(p)
     }
     .map_err(|_e| FatfsError::Unknown)?;
+
+    if flags.contains(OpenFlags::O_TRUNC) {
+        file.truncate().map_err(|_| FatfsError::Unknown)?;
+    }
 
     let fd = {
         let file = ManuallyDrop::new(Box::new(file));

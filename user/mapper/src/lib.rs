@@ -139,6 +139,20 @@ fn mapper_func(my_id: &str, reducer_num: u64) -> Result<()> {
         }
     }
 
+    #[cfg(not(feature = "file-based"))]
+    for (reducer, buffer) in data_buffers.iter().enumerate() {
+        let data_len = buffer
+            .shuffle
+            .iter()
+            .map(|(word, _)| word.len() + core::mem::size_of::<u32>())
+            .sum();
+        as_std::agent::buffer_set_len(
+            &format!("{}-{}", my_id, reducer),
+            data_len,
+        )
+        .expect("failed to set mapper buffer length");
+    }
+
     println!(
         "shuffle end, cost {}ms",
         SystemTime::elapsed(&start).as_millis()

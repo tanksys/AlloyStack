@@ -32,10 +32,7 @@ pub fn main() -> Result<()> {
     let mut buffer: DataBuffer<VecArg> = DataBuffer::with_slot(slot_name.to_owned());
     // let mut f = File::open(input_file)?;
     // let mut buf = String::new();
-    println!(
-        "read_start: {}",
-        SystemTime::now().duration_since(UNIX_EPOCH).as_micros() as f64 / 1000000f64
-    );
+    print_timestamp("read_start");
     let mut f = File::open(input_file)?;
     #[cfg(not(feature = "pkey_per_func"))]
     {
@@ -44,6 +41,9 @@ pub fn main() -> Result<()> {
             .expect("read file failed.");
         println!("file_reader: read_size={}", size);
     }
+    #[cfg(not(feature = "file-based"))]
+    as_std::agent::buffer_set_len(slot_name, buffer.content.len())
+        .expect("failed to set input buffer length");
     #[cfg(feature = "pkey_per_func")]
     {
         let mut data = String::new();
@@ -53,10 +53,12 @@ pub fn main() -> Result<()> {
     }
     // println!("buffer_long={}", buffer.content.len());
     // f.read_to_string(&mut buf).expect("read file failed.");
-    println!(
-        "read_end: {}",
-        SystemTime::now().duration_since(UNIX_EPOCH).as_micros() as f64 / 1000000f64
-    );
+    print_timestamp("read_end");
 
     Ok(().into())
+}
+
+fn print_timestamp(label: &str) {
+    let micros = SystemTime::now().duration_since(UNIX_EPOCH).as_micros();
+    println!("{}: {}.{:06}", label, micros / 1_000_000, micros % 1_000_000);
 }

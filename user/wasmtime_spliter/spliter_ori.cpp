@@ -5,6 +5,7 @@
 
 __attribute__((import_module("env"), import_name("buffer_register"))) void buffer_register(void *slot_name, int name_size, void *buffer, int buffer_size);
 __attribute__((import_module("env"), import_name("access_buffer"))) void access_buffer(void *slot_name, int name_size, void *buffer, int buffer_size);
+__attribute__((import_module("env"), import_name("buffer_len"))) long long buffer_len(void *slot_name, int name_size);
 
 // #define MAX_ARRAY_LENGTH 152221
 // #define MAX_BUFFER_SIZE 1024*1024+152221
@@ -41,10 +42,13 @@ int main(int argc, char* argv[]) {
     if (merger_num > 1) {
         sprintf(slot_name, "pivot_%d", id);
         char *pivot_buffer;
-        pivot_buffer = (char *)malloc(bufferSize * sizeof(char));
-        memset(pivot_buffer, 0, bufferSize * sizeof(char));
+        long long length = buffer_len(slot_name, strlen(slot_name));
+        if (length < 0)
+            return 3;
+        pivot_buffer = (char *)malloc((size_t)length);
+        memset(pivot_buffer, 0, (size_t)length);
         pivot_buffer[0] = '\0'; // 初始化为空字符串
-        access_buffer(slot_name, strlen(slot_name), pivot_buffer, bufferSize);
+        access_buffer(slot_name, strlen(slot_name), pivot_buffer, (int)length);
         ptr = pivot_buffer;
         // printf("pivot_buffer: %s", pivot_buffer);
         while (sscanf(ptr, "%d", &num) == 1) {
@@ -65,11 +69,14 @@ int main(int argc, char* argv[]) {
     // access sorter buffer
     sprintf(slot_name, "sorter_%d", id);
     char *sorter_buffer;
-    sorter_buffer = (char *)malloc(bufferSize * sizeof(char));
-    memset(sorter_buffer, 0, bufferSize * sizeof(char));
+    long long sorter_length = buffer_len(slot_name, strlen(slot_name));
+    if (sorter_length < 0)
+        return 4;
+    sorter_buffer = (char *)malloc((size_t)sorter_length);
+    memset(sorter_buffer, 0, (size_t)sorter_length);
     sorter_buffer[0] = '\0'; // 初始化为空字符串
     get_time();
-    access_buffer(slot_name, strlen(slot_name), sorter_buffer, bufferSize);
+    access_buffer(slot_name, strlen(slot_name), sorter_buffer, (int)sorter_length);
     get_time();
     int sorter_index = 0;
     ptr = sorter_buffer;
@@ -115,18 +122,17 @@ int main(int argc, char* argv[]) {
     printf("merger_index_before_register: %d\n", array_index[0]);
     get_time();
     get_time();
-    printf("array0: %d :%d\n", (void*)(array_index), *array_index);
     for (int i = 0; i < merger_num; i++) {
-        printf("i(%d) = %d array0: %d :%d\n", (void*)&i, i, (void*)(array_index), *array_index);
         char slot_name[20];
         sprintf(slot_name, "merger_%d_%d", id, i);
-        char *merger_buffer = (char *)malloc(bufferSize * sizeof(char));
+        size_t output_size = 1;
+        for (int j = 0; j < array_index[i]; j++)
+            output_size += (size_t)snprintf(NULL, 0, "%d ", array[i][j]);
+        char *merger_buffer = (char *)malloc(output_size);
         // memset(merger_buffer, 0, bufferSize * sizeof(char));
         merger_buffer[0] = '\0'; // 初始化为空字符串
         char *merger_ptr = merger_buffer;
-        printf("array0: %d :%d\n", (void*)(array_index), *array_index);
         printf("i: %d; array_index_before_for: %d\n", i, array_index[i]);
-        printf("%d: %d\n", (void*)(array_index+1), *(array_index+1));
         printf("array_index[0]: %d\n", array_index[0]);
         for (int j = 0; j < array_index[i]; j++) {
             char temp[12]; // 临时缓冲区，注意要足够大以容纳最大整数和一个空格
@@ -139,7 +145,7 @@ int main(int argc, char* argv[]) {
         // 去掉最后一个多余的空格
         // buffer[strlen(buffer) - 1] = '\0';
         *merger_ptr++ = '\0';
-        buffer_register(slot_name, strlen(slot_name), merger_buffer, MAX_BUFFER_SIZE);
+        buffer_register(slot_name, strlen(slot_name), merger_buffer, merger_ptr - merger_buffer);
         // buffer_register(slot_name, strlen(slot_name), buffer, bufferSize);
         // free(buffer);
         // free(array[i]);

@@ -4,6 +4,7 @@
 #include <sys/time.h>
 
 __attribute__((import_module("env"), import_name("access_buffer"))) void access_buffer(void *slot_name, int name_size, void *buffer, int buffer_size);
+__attribute__((import_module("env"), import_name("buffer_len"))) long long buffer_len(void *slot_name, int name_size);
 
 // #define MAX_ARRAY_LENGTH 152221
 // #define MAX_BUFFER_SIZE 1024*1024+152221
@@ -35,10 +36,13 @@ int main(int argc, char* argv[]) {
         sprintf(slot_name, "checker_%d", i);
         // printf("pivotname: %s\n", slot_name);
         char *buffer;
-        buffer = (char *)malloc(bufferSize * sizeof(char));
-        memset(buffer, 0, bufferSize * sizeof(char));
+        long long length = buffer_len(slot_name, strlen(slot_name));
+        if (length < 0)
+            return 3;
+        buffer = (char *)malloc((size_t)length);
+        memset(buffer, 0, (size_t)length);
         buffer[0] = '\0'; // 初始化为空字符串
-        access_buffer(slot_name, strlen(slot_name), buffer, bufferSize);
+        access_buffer(slot_name, strlen(slot_name), buffer, (int)length);
         char *ptr = buffer;
         int num;
         while (sscanf(ptr, "%d", &num) == 1) {
@@ -54,16 +58,14 @@ int main(int argc, char* argv[]) {
         }
         free(buffer);
     }
-    // printf("result_array: ");
-    // for (int i = 0; i < index-1; i++) {
-    //     if (result[i] > result[i+1]) {
-    //         printf("sort error!\n");
-    //         return 0;
-    //     }
-    //     printf("%d ", result[i]);
-    // }
-    // printf("%d\n", result[index-1]);
-    // printf("checker_%d all finished!\n", id);
+    for (int i = 0; i + 1 < index; i++) {
+        if (result[i] > result[i + 1]) {
+            fprintf(stderr, "sort error at index %d: %d > %d\n",
+                    i, result[i], result[i + 1]);
+            return 4;
+        }
+    }
+    printf("wasmtime parallel sort checked %d values\n", index);
     get_time();
     return 0;
 }

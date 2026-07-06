@@ -141,6 +141,7 @@ dependencies = [
  "derive_more",
  "env_logger",
  "libasvisor",
+ "libc",
  "log",
  "thiserror-no-std",
  "tokio",

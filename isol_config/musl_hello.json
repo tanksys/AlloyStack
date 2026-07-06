@@ -1,0 +1,41 @@
+{
+  "services": [
+    [
+      "sys",
+      "libsys.so"
+    ],
+    [
+      "stdio",
+      "libstdio.so"
+    ],
+    [
+      "mm",
+      "libmm.so"
+    ],
+    [
+      "fdtab",
+      "libfdtab.so"
+    ],
+    [
+      "fatfs",
+      "libfatfs.so"
+    ]
+  ],
+  "apps": [
+    [
+      "musl_hello",
+      "libmusl_hello.so"
+    ]
+  ],
+  "groups": [
+    {
+      "list": [
+        "musl_hello",
+        "musl_hello",
+        "musl_hello",
+        "musl_hello"
+      ],
+      "args": {}
+    }
+  ]
+}

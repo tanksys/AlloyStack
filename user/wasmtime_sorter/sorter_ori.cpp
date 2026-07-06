@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 #include <time.h>
 #include <unistd.h>
 #include <sys/time.h>
 #include <vector>
-#include <algorithm>
 
 using namespace std;
 
@@ -20,22 +20,22 @@ __attribute__((import_module("env"), import_name("buffer_register"))) void buffe
 #define MAX_ARRAY_LENGTH 3805441
 #define MAX_BUFFER_SIZE 25*1024*1024+3805441
 
-// 比较函数，用于 qsort
 int compare(const void *a, const void *b) {
-    return (*(int *)a - *(int *)b); // 升序排序
+    int left = *(const int *)a;
+    int right = *(const int *)b;
+    return (left > right) - (left < right);
 }
 
-char nc(FILE *stream) {
-  static char buf[1<<25], *p1 = buf, *p2 = buf;
-  return p1 == p2 && (p2 = (p1 = buf) + fread(buf, 1, 1 << 25, stream), p1 == p2) ? EOF : *p1 ++;
-}
-
-int readfile(FILE *stream) {
-  int x = 0, ch = nc(stream);
-  for (; ch < '0' || ch > '9'; ch = nc(stream));
-  for (; ch >= '0' && ch <= '9'; ch = nc(stream))
-    x = (x << 1) + (x << 3) + (ch ^ 48);
-  return x;
+int nc(FILE *stream) {
+    static unsigned char buf[1 << 25], *current = buf, *end = buf;
+    if (current == end) {
+        size_t size = fread(buf, 1, sizeof(buf), stream);
+        current = buf;
+        end = buf + size;
+        if (current == end)
+            return EOF;
+    }
+    return *current++;
 }
 
 void get_time() {
@@ -72,15 +72,26 @@ int main(int argc, char* argv[]) {
     // time(&now);
     // printf("%ld read start\n", now);
     // write(1, "read start\n", sizeof("read start\n"));
-    char number[10];
     get_time();
-    // while (array[index++] = readfile(file));
-    int ch = nc(file), x = 0;
-    for (; ch != EOF; ch = nc(file)) {
-        if (ch == ' ' || ch == '\n') arrays.push_back(x), x = 0;
-        else x = x * 10 + ch - '0';
+    int ch, value = 0;
+    bool in_number = false;
+    while ((ch = nc(file)) != EOF) {
+        if (ch >= '0' && ch <= '9') {
+            if (value > (INT_MAX - (ch - '0')) / 10) {
+                fprintf(stderr, "integer overflow in %s\n", input_file);
+                fclose(file);
+                return 4;
+            }
+            value = value * 10 + ch - '0';
+            in_number = true;
+        } else if (in_number) {
+            arrays.push_back(value);
+            value = 0;
+            in_number = false;
+        }
     }
-    arrays.push_back(x);
+    if (in_number)
+        arrays.push_back(value);
     index = arrays.size();
     printf("sorter_index: %d\n", index);
     get_time();
@@ -96,8 +107,7 @@ int main(int argc, char* argv[]) {
     printf("index: %d\n", index);
     fclose(file);
     get_time();
-    // qsort(arrays.data(), index, sizeof(int), compare);
-    sort(arrays.data(), arrays.data()+index);
+    qsort(arrays.data(), index, sizeof(*arrays.data()), compare);
     get_time();
     // printf("sorter_%d sort finished!\n", id);
 
@@ -107,9 +117,10 @@ int main(int argc, char* argv[]) {
             int idx = (i+1) * index / merger_num;
             pivot[i] = arrays[idx];
         }
-        char *buffer;
-        buffer = (char *)malloc(MAX_BUFFER_SIZE * sizeof(char));
-        memset(buffer, 0, MAX_BUFFER_SIZE * sizeof(char));
+        size_t pivot_size = 1;
+        for (int i = 0; i < merger_num - 1; i++)
+            pivot_size += (size_t)snprintf(NULL, 0, "%d ", pivot[i]);
+        char *buffer = (char *)malloc(pivot_size);
         buffer[0] = '\0';
         for (int i = 0; i < merger_num-1; i++) {
             char temp[12];
@@ -121,7 +132,7 @@ int main(int argc, char* argv[]) {
             char slot_name[20];
             sprintf(slot_name, "pivot_%d", k);
             // printf("pivotname: %s\n", slot_name);
-            buffer_register(slot_name, strlen(slot_name), buffer, MAX_BUFFER_SIZE);
+            buffer_register(slot_name, strlen(slot_name), buffer, strlen(buffer) + 1);
         }
         // free(buffer);
     }
@@ -131,8 +142,10 @@ int main(int argc, char* argv[]) {
     // write(1, "alloc start\n", sizeof("alloc start\n"));
     char slot_name[20];
     sprintf(slot_name, "sorter_%d", id);
-    char *buffer;
-    buffer = (char *)malloc(MAX_BUFFER_SIZE * sizeof(char));
+    size_t output_size = 1;
+    for (int value : arrays)
+        output_size += (size_t)snprintf(NULL, 0, "%d ", value);
+    char *buffer = (char *)malloc(output_size);
     // time(&now);
     // printf("%ld alloc finished\n", now);
     // write(1, "alloc finished\n", sizeof("alloc finished\n"));
@@ -155,7 +168,7 @@ int main(int argc, char* argv[]) {
     // buffer[strlen(buffer) - 1] = '\0';
     // write(1, "buffer make finished\n", sizeof("buffer make finished\n"));
     get_time();
-    buffer_register(slot_name, strlen(slot_name), buffer, MAX_BUFFER_SIZE);
+    buffer_register(slot_name, strlen(slot_name), buffer, ptr - buffer);
     get_time();
     // write(1, "buffer register finished\n", sizeof("buffer register finished\n"));
     // free(buffer);

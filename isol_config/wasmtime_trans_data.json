@@ -26,5 +26,15 @@
         "trans_data",
         "libwasmtime_trans_data.so"
       ]
+    ],
+    "groups": [
+      {
+        "list": [
+          "trans_data"
+        ],
+        "args": {
+          "data_size": "4096"
+        }
+      }
     ]
   }

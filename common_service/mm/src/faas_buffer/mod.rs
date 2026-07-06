@@ -4,15 +4,19 @@ use core::{alloc::Layout, ptr::NonNull};
 
 use alloc::{borrow::ToOwned, string::String};
 
+use as_hostcall::{
+    mm::{MMError, MMResult},
+    SERVICE_HEAP_SIZE,
+};
 use linked_list_allocator::LockedHeap;
-use as_hostcall::{mm::MMResult, SERVICE_HEAP_SIZE};
 
-use hashbrown::HashMap;
+use hashbrown::{hash_map::Entry, HashMap};
 use lazy_static::lazy_static;
 use spin::Mutex;
 
 lazy_static! {
-    static ref BUFFER_REGISTER: Mutex<HashMap<String, (usize, u64)>> = Mutex::new(HashMap::new());
+    static ref BUFFER_REGISTER: Mutex<HashMap<String, (usize, u64, usize)>> =
+        Mutex::new(HashMap::new());
     static ref BUFFER_ALLOCATOR: LockedHeap = unsafe {
         LockedHeap::new(
             as_std::init_context::ISOLATION_CTX.lock().heap_range.1 as *mut u8,
@@ -22,25 +26,58 @@ lazy_static! {
 }
 
 #[no_mangle]
-pub fn buffer_alloc(slot: &str, l: Layout, fingerprint: u64) -> MMResult<usize> {
+pub fn buffer_alloc_raw(l: Layout) -> MMResult<usize> {
     let addr = BUFFER_ALLOCATOR
         .lock()
         .allocate_first_fit(l)
-        .expect("alloc mem failed");
-    
-    let addr = addr.as_ptr() as usize;
+        .map_err(|_| MMError::NoMemory)?;
 
-    BUFFER_REGISTER
-        .lock()
-        .insert(slot.to_owned(), (addr, fingerprint));
+    Ok(addr.as_ptr() as usize)
+}
 
-    // as_std::println!("buffer_alloc layout={:?}, addr=0x{:x}", l, addr);
+#[no_mangle]
+pub fn buffer_register(
+    slot: &str,
+    addr: usize,
+    fingerprint: u64,
+    data_len: usize,
+) -> MMResult<()> {
+    let mut register = BUFFER_REGISTER.lock();
+    match register.entry(slot.to_owned()) {
+        Entry::Vacant(entry) => {
+            entry.insert((addr, fingerprint, data_len));
+            Ok(())
+        }
+        Entry::Occupied(_) => Err(MMError::BufferSlotExists),
+    }
+}
 
+#[no_mangle]
+pub fn buffer_alloc(slot: &str, l: Layout, fingerprint: u64) -> MMResult<usize> {
+    let addr = buffer_alloc_raw(l)?;
+    if let Err(error) = buffer_register(slot, addr, fingerprint, l.size()) {
+        buffer_dealloc(addr, l);
+        return Err(error);
+    }
     Ok(addr)
 }
 
 #[no_mangle]
-pub fn access_buffer(slot: &str) -> Option<(usize, u64)> {
+pub fn buffer_set_len(slot: &str, data_len: usize) -> MMResult<()> {
+    BUFFER_REGISTER
+        .lock()
+        .get_mut(slot)
+        .map(|metadata| metadata.2 = data_len)
+        .ok_or_else(|| MMError::InvaildArg("existing buffer slot".into(), 0))
+}
+
+#[no_mangle]
+pub fn buffer_len(slot: &str) -> Option<usize> {
+    BUFFER_REGISTER.lock().get(slot).map(|metadata| metadata.2)
+}
+
+#[no_mangle]
+pub fn access_buffer(slot: &str) -> Option<(usize, u64, usize)> {
     let mut register = BUFFER_REGISTER.lock();
     // as_std::println!("buffer register: ");
     // for (k, v) in register.iter() {

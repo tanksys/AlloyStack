@@ -1,0 +1,23 @@
+{
+  "services": [
+    ["sys", "libsys.so"],
+    ["time", "libtime.so"],
+    ["stdio", "libstdio.so"],
+    ["mm", "libmm.so"],
+    ["fdtab", "libfdtab.so"],
+    ["fatfs", "libfatfs.so"]
+  ],
+  "apps": [
+    ["transfer", "libmusl_cpython.so"]
+  ],
+  "fs_image": "fs_images/fatfs.img",
+  "groups": [
+    {
+      "list": ["transfer"],
+      "args": {
+        "pyfile_path": "/wasm_bench/transfer.py",
+        "data_size": "4096"
+      }
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "services": [
+    ["sys", "libsys.so"],
+    ["stdio", "libstdio.so"],
+    ["mm", "libmm.so"],
+    ["fdtab", "libfdtab.so"],
+    ["fatfs", "libfatfs.so"]
+  ],
+  "apps": [
+    ["sorter", "libmusl_sorter.so"],
+    ["splitter", "libmusl_splitter.so"],
+    ["merger", "libmusl_merger.so"],
+    ["checker", "libmusl_checker.so"]
+  ],
+  "fs_image": "fs_images/fatfs.img",
+  "groups": [
+    {
+      "list": ["sorter", "sorter", "sorter"],
+      "args": {
+        "sorter_num": "3",
+        "merger_num": "3"
+      }
+    },
+    {
+      "list": ["splitter", "splitter", "splitter"],
+      "args": {
+        "sorter_num": "3",
+        "merger_num": "3"
+      }
+    },
+    {
+      "list": ["merger", "merger", "merger"],
+      "args": {
+        "sorter_num": "3",
+        "merger_num": "3"
+      }
+    },
+    {
+      "list": ["checker"],
+      "args": {
+        "merger_num": "3"
+      }
+    }
+  ]
+}

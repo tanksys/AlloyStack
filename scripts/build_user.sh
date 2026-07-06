@@ -24,6 +24,7 @@ for file in $(find user -name 'Cargo.toml' \
     -not -path 'user/should_panic/Cargo.toml' \
     -not -path 'user/never_stop/Cargo.toml' \
     -not -path 'user/tinywasm*/Cargo.toml' \
+    -not -path 'user/musl*/Cargo.toml' \
     -not -path 'user/wasmtime*/Cargo.toml'); do
     echo "Build $file".
     if ! bash -c "cargo build $feature_arg --manifest-path $file $release_flag"; then

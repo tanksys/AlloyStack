@@ -1,0 +1,24 @@
+{
+  "services": [
+    ["sys", "libsys.so"],
+    ["time", "libtime.so"],
+    ["stdio", "libstdio.so"],
+    ["mm", "libmm.so"],
+    ["fdtab", "libfdtab.so"],
+    ["fatfs", "libfatfs.so"]
+  ],
+  "apps": [
+    ["wordcount", "libmusl_cpython.so"]
+  ],
+  "fs_image": "fs_images/fatfs.img",
+  "groups": [
+    {
+      "list": ["wordcount"],
+      "args": {
+        "pyfile_path": "/wasm_bench/wordcount.py",
+        "mapper_num": "1",
+        "reducer_num": "1"
+      }
+    }
+  ]
+}

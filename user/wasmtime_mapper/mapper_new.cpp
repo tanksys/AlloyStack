@@ -13,8 +13,6 @@ using namespace std;
 
 #define MAX_SLOT_NUM 10
 #define MAX_WORDS 18000000
-#define MAX_BUFFER_SIZE 500000
-
 string words[MAX_WORDS];
 int counts[MAX_WORDS];
 
@@ -53,17 +51,14 @@ int main(int argc, char* argv[])  {
 
     string buffer[MAX_SLOT_NUM];
     string slot_name[MAX_SLOT_NUM];
+    for (int i = 0; i < reducer_num; ++i)
+        slot_name[i] = "buffer_" + to_string(i) + "_" + to_string(id);
 
     for (auto& pair : word_map) {
         int partition_index = hash<string>{}(pair.first) % reducer_num;
-        slot_name[partition_index] = "buffer_" + to_string(partition_index) + "_" + to_string(id);
         buffer[partition_index].append(pair.first + " " + to_string(pair.second) + "\n");
     }
 
-    for (int i = 0; i < reducer_num; i++) {
-        buffer[i].resize(MAX_BUFFER_SIZE, '\0');
-    }
-    
     int word_index = word_map.size();
     cout << "mapper_" << id << " solved " << word_index << " words!" << endl;
 

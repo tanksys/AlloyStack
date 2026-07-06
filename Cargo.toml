@@ -17,7 +17,10 @@ members = [
 # In current implementation, as_std has conflict features (e.g. `panic_def` and 
 # `unwinding`). Of course, if add "user/" to members, will also have problem of 
 # feature gate. 
-exclude = ["user/", "common_service/", "baseline/"]
+#
+# as_musl enables as_std's application-side allocator and panic definitions, so
+# it must also be built separately through the musl user crates.
+exclude = ["user/", "common_service/", "baseline/", "as_musl/"]
 default-members = ["bins/asvisor"]
 resolver = "2"
 

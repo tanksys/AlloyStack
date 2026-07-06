@@ -1,0 +1,26 @@
+{
+  "services": [
+    ["sys", "libsys.so"],
+    ["time", "libtime.so"],
+    ["stdio", "libstdio.so"],
+    ["mm", "libmm.so"],
+    ["fdtab", "libfdtab.so"],
+    ["fatfs", "libfatfs.so"]
+  ],
+  "apps": [
+    ["parallel_sort_0", "libmusl_cpython_0.so"],
+    ["parallel_sort_1", "libmusl_cpython_1.so"],
+    ["parallel_sort_2", "libmusl_cpython_2.so"]
+  ],
+  "fs_image": "fs_images/fatfs.img",
+  "groups": [
+    {
+      "list": ["parallel_sort_0", "parallel_sort_1", "parallel_sort_2"],
+      "args": {
+        "pyfile_path": "/wasm_bench/parallel_sort.py",
+        "sorter_num": "3",
+        "merger_num": "3"
+      }
+    }
+  ]
+}

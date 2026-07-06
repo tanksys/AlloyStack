@@ -16,6 +16,10 @@ pub mod apis;
 enum DataSource {
     FatFS(Fd),
     Net(SockFd),
+    Directory {
+        entries: Vec<u8>,
+        cursor: usize,
+    },
 }
 
 #[derive(Clone)]

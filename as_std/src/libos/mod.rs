@@ -25,10 +25,14 @@ pub struct UserHostCall {
 
     write_addr: Option<usize>,
     open_addr: Option<usize>,
+    open_dir_addr: Option<usize>,
+    getdents_addr: Option<usize>,
     read_addr: Option<usize>,
     close_addr: Option<usize>,
     lseek_addr: Option<usize>,
+    lseek64_addr: Option<usize>,
     stat_addr: Option<usize>,
+    path_stat_addr: Option<usize>,
     readdir_addr: Option<usize>,
     connect_addr: Option<usize>,
     socket_addr: Option<usize>,
@@ -42,7 +46,10 @@ pub struct UserHostCall {
     fatfs_read_addr: Option<usize>,
     fatfs_close_addr: Option<usize>,
     fatfs_seek_addr: Option<usize>,
+    fatfs_seek64_addr: Option<usize>,
     fatfs_stat_addr: Option<usize>,
+    fatfs_path_stat_addr: Option<usize>,
+    fatfs_readdir_addr: Option<usize>,
 
     smoltcp_addrinfo_addr: Option<usize>,
     smoltcp_connect_addr: Option<usize>,
@@ -53,6 +60,10 @@ pub struct UserHostCall {
     smoltcp_close_addr: Option<usize>,
 
     alloc_buffer_addr: Option<usize>,
+    alloc_buffer_raw_addr: Option<usize>,
+    register_buffer_addr: Option<usize>,
+    set_buffer_len_addr: Option<usize>,
+    buffer_len_addr: Option<usize>,
     access_buffer_addr: Option<usize>,
     dealloc_buffer_addr: Option<usize>,
     mmap_addr: Option<usize>,
@@ -67,6 +78,9 @@ pub struct UserHostCall {
     nanosleep_addr: Option<usize>,
 
     sigaction_addr: Option<usize>,
+    futex_addr: Option<usize>,
+    gettid_addr: Option<usize>,
+    getrandom_addr: Option<usize>,
 }
 
 impl UserHostCall {
@@ -85,10 +99,14 @@ impl UserHostCall {
 
             CommonHostCall::Write => &mut self.write_addr,
             CommonHostCall::Open => &mut self.open_addr,
+            CommonHostCall::OpenDir => &mut self.open_dir_addr,
+            CommonHostCall::GetDents => &mut self.getdents_addr,
             CommonHostCall::Read => &mut self.read_addr,
             CommonHostCall::Close => &mut self.close_addr,
             CommonHostCall::Lseek => &mut self.lseek_addr,
+            CommonHostCall::Lseek64 => &mut self.lseek64_addr,
             CommonHostCall::Stat => &mut self.stat_addr,
+            CommonHostCall::PathStat => &mut self.path_stat_addr,
             CommonHostCall::ReadDir => &mut self.readdir_addr,
             CommonHostCall::Connect => &mut self.connect_addr,
             CommonHostCall::Socket => &mut self.socket_addr,
@@ -102,7 +120,10 @@ impl UserHostCall {
             CommonHostCall::FatfsRead => &mut self.fatfs_read_addr,
             CommonHostCall::FatfsClose => &mut self.fatfs_close_addr,
             CommonHostCall::FatfsSeek => &mut self.fatfs_seek_addr,
+            CommonHostCall::FatfsSeek64 => &mut self.fatfs_seek64_addr,
             CommonHostCall::FatfsStat => &mut self.fatfs_stat_addr,
+            CommonHostCall::FatfsPathStat => &mut self.fatfs_path_stat_addr,
+            CommonHostCall::FatfsReadDir => &mut self.fatfs_readdir_addr,
 
             CommonHostCall::SmoltcpAddrInfo => &mut self.smoltcp_addrinfo_addr,
             CommonHostCall::SmoltcpConnect => &mut self.smoltcp_connect_addr,
@@ -113,6 +134,10 @@ impl UserHostCall {
             CommonHostCall::SmoltcpClose => &mut self.smoltcp_close_addr,
 
             CommonHostCall::BufferAlloc => &mut self.alloc_buffer_addr,
+            CommonHostCall::BufferAllocRaw => &mut self.alloc_buffer_raw_addr,
+            CommonHostCall::BufferRegister => &mut self.register_buffer_addr,
+            CommonHostCall::BufferSetLen => &mut self.set_buffer_len_addr,
+            CommonHostCall::BufferLen => &mut self.buffer_len_addr,
             CommonHostCall::AccessBuffer => &mut self.access_buffer_addr,
             CommonHostCall::BufferDealloc => &mut self.dealloc_buffer_addr,
             CommonHostCall::Mmap => &mut self.mmap_addr,
@@ -127,6 +152,9 @@ impl UserHostCall {
             CommonHostCall::NanoSleep => &mut self.nanosleep_addr,
 
             CommonHostCall::SigAction => &mut self.sigaction_addr,
+            CommonHostCall::Futex => &mut self.futex_addr,
+            CommonHostCall::GetTid => &mut self.gettid_addr,
+            CommonHostCall::GetRandom => &mut self.getrandom_addr,
         };
 
         if entry_addr.is_none() {

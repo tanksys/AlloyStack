@@ -1,0 +1,53 @@
+{
+  "services": [
+    ["sys", "libsys.so"],
+    ["stdio", "libstdio.so"],
+    ["mm", "libmm.so"],
+    ["fdtab", "libfdtab.so"]
+  ],
+  "apps": [
+    ["func", "libmusl_longchain.so"]
+  ],
+  "groups": [
+    {
+      "list": ["func"],
+      "args": {"func_num": "0", "chain_len": "10"}
+    },
+    {
+      "list": ["func"],
+      "args": {"func_num": "1", "chain_len": "10"}
+    },
+    {
+      "list": ["func"],
+      "args": {"func_num": "2", "chain_len": "10"}
+    },
+    {
+      "list": ["func"],
+      "args": {"func_num": "3", "chain_len": "10"}
+    },
+    {
+      "list": ["func"],
+      "args": {"func_num": "4", "chain_len": "10"}
+    },
+    {
+      "list": ["func"],
+      "args": {"func_num": "5", "chain_len": "10"}
+    },
+    {
+      "list": ["func"],
+      "args": {"func_num": "6", "chain_len": "10"}
+    },
+    {
+      "list": ["func"],
+      "args": {"func_num": "7", "chain_len": "10"}
+    },
+    {
+      "list": ["func"],
+      "args": {"func_num": "8", "chain_len": "10"}
+    },
+    {
+      "list": ["func"],
+      "args": {"func_num": "9", "chain_len": "10"}
+    }
+  ]
+}

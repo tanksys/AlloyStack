@@ -8,7 +8,7 @@ use spin::Mutex;
 use core::mem::forget;
 
 use as_hostcall::types::{OpenFlags, OpenMode};
-use as_std::{agent::FaaSFuncResult as Result, args, libos::libos, println, time::{SystemTime, UNIX_EPOCH},};
+use as_std::{agent::FaaSFuncResult as Result, args, libos::libos};
 
 use wasmtime_wasi_api::{wasmtime, LibosCtx};
 use wasmtime::Store;
@@ -38,10 +38,13 @@ fn func_body(my_id: &str, pyfile_path: &str) -> Result<()> {
         wasmtime_wasi_api::JMP_BUF_MAP.lock().insert(my_id.to_string(), Arc::new(jmpbuf));
     }
 
-    let wasi_args: Vec<String> = Vec::from([
+    let mut wasi_args: Vec<String> = Vec::from([
         "python.wasm".to_string(),
         pyfile_path.to_string(),
     ]);
+    if let Some(data_size) = args::get("data_size") {
+        wasi_args.push(data_size.to_string());
+    }
     wasmtime_wasi_api::set_wasi_args(my_id, wasi_args);
 
     let _open_root = *MUST_OPEN_ROOT;
