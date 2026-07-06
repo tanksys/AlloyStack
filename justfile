@@ -317,6 +317,61 @@ latency_report *args:
 
     "${cmd[@]}"
 
+rust_latency_report *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    output="reports/rust_latency_report.md"
+    results="reports/rust_latency_report_results.json"
+    collect="0"
+    clean="0"
+    repeat="1"
+    skip_prepare="0"
+    timeout="600"
+
+    for arg in {{ args }}; do
+        case "$arg" in
+            output=*)
+                output="${arg#output=}"
+                ;;
+            results=*)
+                results="${arg#results=}"
+                ;;
+            collect=*)
+                collect="${arg#collect=}"
+                ;;
+            clean=*)
+                clean="${arg#clean=}"
+                ;;
+            repeat=*)
+                repeat="${arg#repeat=}"
+                ;;
+            skip_prepare=*)
+                skip_prepare="${arg#skip_prepare=}"
+                ;;
+            timeout=*)
+                timeout="${arg#timeout=}"
+                ;;
+            *)
+                echo "unknown rust_latency_report argument: $arg" >&2
+                exit 2
+                ;;
+        esac
+    done
+
+    cmd=(python3 scripts/rust_latency_report.py --output "$output" --results "$results" --repeat "$repeat" --timeout "$timeout")
+    if [[ "$collect" == "1" ]]; then
+        cmd+=(--collect)
+    fi
+    if [[ "$clean" == "1" ]]; then
+        cmd+=(--clean)
+    fi
+    if [[ "$skip_prepare" == "1" ]]; then
+        cmd+=(--skip-prepare)
+    fi
+
+    "${cmd[@]}"
+
 asvisor:
     cargo build {{ release_flag }}
 

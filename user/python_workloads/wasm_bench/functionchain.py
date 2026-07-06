@@ -64,7 +64,12 @@ def func_inner(func_num, func_n):
 
 
 def main():
-    func_num = int(sys.argv[1])
+    global buffer_size
+    if len(sys.argv) >= 3:
+        buffer_size = int(sys.argv[1])
+        func_num = int(sys.argv[2])
+    else:
+        func_num = int(sys.argv[1])
     for i in range(func_num):
         func_inner(i, func_num)
 

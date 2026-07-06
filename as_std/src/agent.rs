@@ -119,6 +119,21 @@ mod refer_based_impl {
                 }
             })
         }
+
+        /// Takes a buffer produced by the same loaded module and reclaims it
+        /// when the returned value is dropped.
+        ///
+        /// # Safety
+        ///
+        /// Any heap allocations owned by `T` must have been allocated by the
+        /// same global allocator instance as the caller. In particular, this
+        /// must not be used to reclaim a buffer created by another `.so`.
+        pub unsafe fn from_buffer_slot_owned(slot: String) -> Option<Self> {
+            Self::from_buffer_slot(slot).map(|mut buffer| {
+                buffer.used = true;
+                buffer
+            })
+        }
     }
 
     impl<T> Default for DataBuffer<T>
@@ -165,7 +180,11 @@ mod refer_based_impl {
         fn drop(&mut self) {
             if self.used {
                 let ptr = Box::into_raw(unsafe { ManuallyDrop::take(&mut self.inner) });
-                // println!("drop DataBuffer val: 0x{:x}", ptr as usize);
+                // The Box storage comes from the LibOS buffer allocator, while
+                // fields owned by T (for example String) use the user heap.
+                // Run T's destructor first, then return only the outer storage
+                // to the buffer allocator.
+                unsafe { core::ptr::drop_in_place(ptr) };
                 libos!(buffer_dealloc(ptr as usize, Layout::new::<T>()));
             }
         }

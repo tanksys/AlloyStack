@@ -24,7 +24,7 @@ lazy_static::lazy_static! {
     };
 }
 
-fn func_body(pyfile_path: &str, func_num: u64) -> Result<()> {
+fn func_body(pyfile_path: &str, func_num: u64, data_size: usize) -> Result<()> {
     let my_map_id = &format!("func_{}", func_num);
 
     let mut jmpbuf = sjlj::JumpBuf::new();
@@ -43,6 +43,7 @@ fn func_body(pyfile_path: &str, func_num: u64) -> Result<()> {
     let wasi_args: Vec<String> = Vec::from([
         "python.wasm".to_string(),
         pyfile_path.to_string(),
+        data_size.to_string(),
         func_num.to_string(),
     ]);
     wasmtime_wasi_api::set_wasi_args(my_map_id, wasi_args);
@@ -77,6 +78,10 @@ pub fn main() -> Result<()> {
         .expect("missing arg func_num")
         .parse()
         .unwrap_or_else(|_| panic!("bad arg, func_num={}", args::get("func_num").unwrap()));
+    let data_size: usize = args::get("data_size")
+        .unwrap_or("268435456")
+        .parse()
+        .expect("bad data_size");
 
-    func_body(pyfile_path, func_num)
+    func_body(pyfile_path, func_num, data_size)
 }

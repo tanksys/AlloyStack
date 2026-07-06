@@ -37,7 +37,7 @@ lazy_static::lazy_static! {
     };
 }
 
-fn func_body(my_id: &str, func_num: u64) -> Result<()> {
+fn func_body(my_id: &str, func_num: u64, chain_len: u64, data_size: usize) -> Result<()> {
     // #[cfg(feature = "log")]
     println!("rust: my_id: {:?}, func_num: {:?}", my_id, func_num);
 
@@ -45,6 +45,8 @@ fn func_body(my_id: &str, func_num: u64) -> Result<()> {
         "fake system path!".to_string(),
         my_id.to_string(),
         func_num.to_string(),
+        chain_len.to_string(),
+        data_size.to_string(),
     ]);
     wasmtime_wasi_api::set_wasi_args(my_id, wasi_args);
 
@@ -61,10 +63,12 @@ fn func_body(my_id: &str, func_num: u64) -> Result<()> {
         .get_typed_func::<(), ()>(&mut store, "_start")
         .map_err(|e| e.to_string())?;
 
-    main.call(store, ()).map_err(|e| e.to_string())?;
+    main.call(&mut store, ()).map_err(|e| e.to_string())?;
+    // Published buffers point into this instance's linear memory.
+    forget(store);
 
     
-    if func_num == 9 {
+    if func_num + 1 == chain_len {
         let data = DataBuffer::<MyData>::from_buffer_slot("Conference".to_owned());
         if let Some(buffer) = data {
             let dur = buffer.current_time.elapsed();
@@ -83,6 +87,14 @@ pub fn main() -> Result<()> {
         .expect("missing arg func_num")
         .parse()
         .unwrap_or_else(|_| panic!("bad arg, func_num={}", args::get("func_num").unwrap()));
+    let chain_len: u64 = args::get("chain_len")
+        .unwrap_or("10")
+        .parse()
+        .expect("bad chain_len");
+    let data_size: usize = args::get("data_size")
+        .unwrap_or("2")
+        .parse()
+        .expect("bad data_size");
     if func_num == 0 {
         let mut d = DataBuffer::<MyData>::with_slot("Conference".to_owned());
         d.current_time = SystemTime::now();
@@ -90,5 +102,5 @@ pub fn main() -> Result<()> {
         // println!("start_time: {:?}", start_time);
     }
     
-    func_body(my_id, func_num)
+    func_body(my_id, func_num, chain_len, data_size)
 }
