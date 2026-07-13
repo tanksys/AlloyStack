@@ -7,3 +7,7 @@
 [submodule "third_party/cpython"]
 	path = third_party/cpython
 	url = https://github.com/python/cpython.git
+[submodule "third_party/lib-python-numpy"]
+	path = third_party/lib-python-numpy
+	url = https://github.com/unikraft/lib-python-numpy.git
+	branch = staging
