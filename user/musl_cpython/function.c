@@ -204,6 +204,15 @@ PyMODINIT_FUNC PyInit_pyas(void)
     return PyModule_Create(&pyas_module);
 }
 
+#ifdef ALLOY_ENABLE_NUMPY
+int alloy_numpy_register(void);
+PyMODINIT_FUNC PyInit__datetime(void);
+PyMODINIT_FUNC PyInit_math(void);
+PyMODINIT_FUNC PyInit__struct(void);
+PyMODINIT_FUNC PyInit__contextvars(void);
+PyMODINIT_FUNC PyInit_binascii(void);
+#endif
+
 static const char *find_arg(int argc, char **argv, const char *key)
 {
     size_t key_len = strlen(key);
@@ -276,6 +285,32 @@ int main(int argc, char **argv)
         fprintf(stderr, "failed to register built-in pyas module\n");
         goto init_failed;
     }
+#ifdef ALLOY_ENABLE_NUMPY
+    if (PyImport_AppendInittab("math", PyInit_math) < 0) {
+        fprintf(stderr, "failed to register built-in math module\n");
+        goto init_failed;
+    }
+    if (PyImport_AppendInittab("_struct", PyInit__struct) < 0) {
+        fprintf(stderr, "failed to register built-in _struct module\n");
+        goto init_failed;
+    }
+    if (PyImport_AppendInittab("_contextvars", PyInit__contextvars) < 0) {
+        fprintf(stderr, "failed to register built-in _contextvars module\n");
+        goto init_failed;
+    }
+    if (PyImport_AppendInittab("binascii", PyInit_binascii) < 0) {
+        fprintf(stderr, "failed to register built-in binascii module\n");
+        goto init_failed;
+    }
+    if (PyImport_AppendInittab("_datetime", PyInit__datetime) < 0) {
+        fprintf(stderr, "failed to register built-in _datetime module\n");
+        goto init_failed;
+    }
+    if (alloy_numpy_register() < 0) {
+        fprintf(stderr, "failed to register built-in numpy modules\n");
+        goto init_failed;
+    }
+#endif
     status = PyConfig_SetString(&config, &config.program_name, L"python");
     if (report_status(status))
         goto init_failed;
@@ -283,6 +318,10 @@ int main(int argc, char **argv)
     if (report_status(status))
         goto init_failed;
     status = PyWideStringList_Append(&config.module_search_paths, L"Lib");
+    if (report_status(status))
+        goto init_failed;
+    status = PyWideStringList_Append(&config.module_search_paths,
+                                     L"Lib/site-packages");
     if (report_status(status))
         goto init_failed;
     if (configure_argv(&config, script, argc, argv))

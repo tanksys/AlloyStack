@@ -1,0 +1,22 @@
+{
+  "services": [
+    ["sys", "libsys.so"],
+    ["time", "libtime.so"],
+    ["stdio", "libstdio.so"],
+    ["mm", "libmm.so"],
+    ["fdtab", "libfdtab.so"],
+    ["fatfs", "libfatfs.so"]
+  ],
+  "apps": [
+    ["numpy_smoke", "libmusl_cpython.so"]
+  ],
+  "fs_image": "fs_images/fatfs_numpy.img",
+  "groups": [
+    {
+      "list": ["numpy_smoke"],
+      "args": {
+        "pyfile_path": "/wasm_bench/numpy_smoke.py"
+      }
+    }
+  ]
+}

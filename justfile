@@ -16,6 +16,7 @@ mpk_flag := if enable_mpk == "1" {
 } else { "" }
 
 mpk_feature_flag := if mpk_flag == "" { "" } else { "--features " + mpk_flag }
+musl_cpython_numpy_feature_flag := "--features " + if mpk_flag == "" { "numpy" } else { mpk_flag + ",numpy" }
 
 buffer_feature_flag := if enable_file_buffer == "1" { "--features file-based" } else { "" }
 
@@ -138,6 +139,29 @@ musl_cpython: musl
     bash scripts/build_cpython_musl.sh
     cargo build {{ release_flag }} {{ mpk_feature_flag }} --manifest-path user/musl_cpython/Cargo.toml
     for id in 0 1 2 3 4; do cp -L target/{{profile}}/libmusl_cpython.so target/{{profile}}/libmusl_cpython_${id}.so; done
+
+cxx_musl:
+    python3 scripts/build_cxx_musl.py
+
+musl_cpython_numpy: musl cxx_musl
+    bash scripts/build_cpython_musl.sh
+    python3 scripts/build_numpy_musl.py --archive-only
+    cargo build {{ release_flag }} {{ musl_cpython_numpy_feature_flag }} --manifest-path user/musl_cpython/Cargo.toml
+    for id in 0 1 2 3 4; do cp -L target/{{profile}}/libmusl_cpython.so target/{{profile}}/libmusl_cpython_${id}.so; done
+
+musl_cpython_numpy_minimal: musl
+    bash scripts/build_cpython_musl.sh
+    python3 scripts/build_numpy_musl.py --minimal --archive-only
+    cargo build {{ release_flag }} {{ musl_cpython_numpy_feature_flag }} --manifest-path user/musl_cpython/Cargo.toml
+    for id in 0 1 2 3 4; do cp -L target/{{profile}}/libmusl_cpython.so target/{{profile}}/libmusl_cpython_${id}.so; done
+
+numpy_smoke: asvisor all_libos musl_cpython_numpy
+    NUMPY_MODE=full ./scripts/sync_numpy_workloads.sh
+    target/{{profile}}/asvisor --files isol_config/musl_cpython_numpy.json
+
+numpy_smoke_minimal: asvisor all_libos musl_cpython_numpy_minimal
+    NUMPY_MODE=minimal ./scripts/sync_numpy_workloads.sh
+    target/{{profile}}/asvisor --files isol_config/musl_cpython_numpy.json
 
 all_musl_c: musl_wordcount musl_parallel_sort musl_long_chain musl_trans_data
 all_py_musl: musl_cpython
